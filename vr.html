@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Explorando a Catadupa · Óculos VR</title>
+<script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+<style>
+  [hidden] { display: none !important; }
+  html, body { margin: 0; height: 100%; background: #121A15; font-family: Verdana, sans-serif; }
+  #intro {
+    position: fixed; inset: 0; z-index: 10; background: #121A15; color: #E4EAE1;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px;
+    padding: 24px max(20px, env(safe-area-inset-left, 0px)); text-align: center;
+  }
+  #intro h1 { font-size: 1.8rem; margin: 0; }
+  #intro p { margin: 0; max-width: 34rem; line-height: 1.5; color: #A2AFA5; }
+  #intro ol { text-align: left; max-width: 30rem; line-height: 1.6; color: #C9D3C6; margin: 0; padding-left: 1.2rem; }
+  #intro button { font: inherit; font-weight: bold; font-size: 1.1rem; padding: 14px 26px; border: 0; border-radius: 6px; background: #6FC0C8; color: #0F1712; cursor: pointer; }
+  #intro .alt { background: transparent; color: #E4EAE1; border: 2px solid #E4EAE1; font-size: .95rem; padding: 10px 18px; }
+  #intro a { color: #6FC0C8; }
+  #vids { position: absolute; width: 1px; height: 1px; overflow: hidden; opacity: 0; pointer-events: none; }
+</style>
+</head>
+<body>
+
+<div id="intro">
+  <h1>Explorando a Catadupa no óculos VR</h1>
+  <p>Funciona com óculos de papelão ou VR Box: o celular vai dentro dele e você explora a reserva mexendo a cabeça.</p>
+  <ol>
+    <li>Gire o celular na horizontal e aumente o brilho.</li>
+    <li>Toque em <b>Entrar no óculos</b> e encaixe o celular no VR Box.</li>
+    <li>Para escolher algo, olhe para o botão e espere o círculo completar.</li>
+  </ol>
+  <button type="button" id="go">Entrar no óculos</button>
+  <button type="button" id="window" class="alt">Ver sem óculos (mexendo o celular)</button>
+  <p><a href="./">Voltar ao tour normal</a></p>
+</div>
+
+<div id="vids">
+  <video id="v-chegada" src="media/chegada.mp4" playsinline webkit-playsinline loop muted preload="auto"></video>
+  <video id="v-recepcao" src="media/recepcao.mp4" playsinline webkit-playsinline loop preload="auto"></video>
+  <video id="v-interior" src="media/interior.mp4" playsinline webkit-playsinline loop muted preload="auto"></video>
+  <video id="v-salao" src="media/salao.mp4" playsinline webkit-playsinline loop muted preload="auto"></video>
+  <video id="v-jardim" src="media/jardim.mp4" playsinline webkit-playsinline loop muted preload="auto"></video>
+  <video id="v-rio" src="media/rio.mp4" playsinline webkit-playsinline loop preload="auto"></video>
+</div>
+
+<a-scene id="scene" loading-screen="enabled: false" vr-mode-ui="enabled: false"
+         renderer="colorManagement: true" cursor="rayOrigin: mouse" raycaster="objects: .clickable">
+  <a-assets timeout="4000">
+    <img id="i-pano" src="media/panorama.jpg">
+    <img id="i-acervo" src="media/acervo.jpg">
+    <img id="i-portao" src="media/portao.jpg">
+  </a-assets>
+
+  <a-sky color="#15211A"></a-sky>
+  <a-circle radius="12" rotation="-90 0 0" position="0 -1.2 0" color="#1C2C22"></a-circle>
+
+  <a-entity id="rig" position="0 1.6 0">
+    <a-camera id="cam" position="0 0 0" wasd-controls-enabled="false" look-controls="magicWindowTrackingEnabled: true">
+      <a-entity cursor="fuse: true; fuseTimeout: 1500" raycaster="objects: .clickable; far: 20"
+                position="0 0 -1"
+                geometry="primitive: ring; radiusInner: 0.012; radiusOuter: 0.02"
+                material="color: #F6F7F2; shader: flat"
+                animation__fusing="property: scale; startEvents: fusing; easing: easeInCubic; dur: 1500; from: 1 1 1; to: 0.3 0.3 0.3"
+                animation__leave="property: scale; startEvents: mouseleave; dur: 150; to: 1 1 1"></a-entity>
+    </a-camera>
+  </a-entity>
+
+  <a-entity id="world" position="0 1.6 0"></a-entity>
+</a-scene>
+
+<script>
+const STOPS = [
+  { kicker: 'Antes de chegar', title: 'Os morros contam a história', type: 'pano',
+    text: 'A Mata Atlântica do Vale do Paraíba foi derrubada no século XIX para plantar café. Quando o café foi embora, ficou o pasto. Olhe em volta e mire nos pontos laranja.',
+    repare: 'Onde a mata sobreviveu? Quase sempre nos topos e nas encostas mais íngremes.' },
+  { kicker: 'Casarão de 1831', title: 'Chegada ao casarão', type: 'video', id: 'v-chegada',
+    text: 'A sede foi erguida em 1831, quando o Vale do Paraíba começava a ser a maior região produtora de café do país.',
+    repare: 'Compare o casarão com os morros de pasto da estrada: a mesma terra, dois destinos.' },
+  { kicker: 'Na porta do casarão', title: 'Quem cuida da reserva', type: 'video', id: 'v-recepcao',
+    text: 'A RPPN existe por decisão dos próprios donos, que moram no casarão e tocam a restauração. Este vídeo tem som.',
+    repare: 'O que leva alguém a transformar parte da própria terra em reserva para sempre?' },
+  { kicker: 'Dentro do casarão', title: 'Uma casa feita de mata', type: 'video', id: 'v-interior',
+    text: 'Pé-direito alto, forro de tábuas, escada e corrimão de madeira.',
+    repare: 'Quanta madeira você vê aqui? O que havia no lugar de onde ela veio?' },
+  { kicker: 'Acervo', title: 'Salão de Memórias', type: 'video', id: 'v-salao', extra: 'i-acervo',
+    text: 'Arreios, ferramentas, um moedor e grãos de café. Ao lado, retratos e objetos indígenas.',
+    repare: 'Quem usava essas ferramentas? A história do café passa por indígenas e pessoas escravizadas.' },
+  { kicker: 'Ao redor da casa', title: 'Onde o jardim vira mata', type: 'video', id: 'v-jardim',
+    text: 'Palmeiras, samambaias e plantas de folha larga se misturam com a vegetação mais alta ao fundo.',
+    repare: 'Onde termina o jardim e começa a mata? Essa linha existe?' },
+  { kicker: 'Entrada da reserva', title: 'O portão da RPPN', type: 'image', id: 'i-portao', ratio: 640 / 368,
+    text: 'Aqui começam os 38,18 ha protegidos para sempre. Dentro de uma RPPN só são permitidas pesquisa e visitação educativa, turística ou recreativa.',
+    repare: 'O que muda quando atravessamos este portão?' },
+  { kicker: 'Dentro da reserva', title: 'O Rio Formoso', type: 'video', id: 'v-rio',
+    text: '“Catadupa” quer dizer queda d’água: o rio forma uma cachoeira dupla na fazenda. A mata nas margens protege a água. Este vídeo tem som.',
+    repare: 'O que aconteceria com o rio se as margens virassem pasto?' }
+];
+
+const HOTS = [
+  { x: 43, y: 40, t: 'Pasto', d: 'Capim onde antes havia mata e, depois, café. O solo pisoteado perde fertilidade e sofre erosão.' },
+  { x: 81, y: 31, t: 'Mata no topo', d: 'Fragmento de floresta que sobrou no alto. Topos de morro são Áreas de Preservação Permanente.' },
+  { x: 53, y: 63, t: 'Capoeira', d: 'Arbustos e árvores jovens no pasto abandonado: a mata voltando sozinha.' },
+  { x: 9, y: 70, t: 'Árvores de borda', d: 'Pioneiras que crescem rápido no sol e preparam o terreno para a mata fechada.' },
+  { x: 15, y: 14, t: 'Encosta com mata', d: 'Na encosta mais íngreme, onde era difícil plantar, a floresta resistiu.' }
+];
+
+const C = { bg: '#1A241E', ink: '#E4EAE1', muted: '#A2AFA5', river: '#6FC0C8', coffee: '#E0A64E' };
+const world = document.getElementById('world');
+const scene = document.getElementById('scene');
+let current = 0;
+
+/* Painéis de texto desenhados em canvas (mantém acentos do português) */
+function wrap(ctx, text, maxW) {
+  const words = text.split(' '); const lines = []; let line = '';
+  for (const w of words) {
+    const t = line ? line + ' ' + w : w;
+    if (ctx.measureText(t).width > maxW && line) { lines.push(line); line = w; } else line = t;
+  }
+  if (line) lines.push(line);
+  return lines;
+}
+function makeCanvas(w, h, draw) {
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  draw(c.getContext('2d'), w, h); return c;
+}
+function panel(el, canvas) {
+  el.setAttribute('material', { shader: 'flat', src: canvas, transparent: true });
+  const mesh = el.getObject3D('mesh');
+  if (mesh && mesh.material.map) mesh.material.map.needsUpdate = true;
+}
+function plane(w, h, pos, rot = '0 0 0') {
+  const e = document.createElement('a-plane');
+  e.setAttribute('width', w); e.setAttribute('height', h);
+  e.setAttribute('position', pos); e.setAttribute('rotation', rot);
+  world.appendChild(e); return e;
+}
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+}
+function titleCanvas(s, i) {
+  return makeCanvas(1400, 220, (ctx, w, h) => {
+    ctx.fillStyle = C.coffee; ctx.font = 'bold 34px Verdana, sans-serif';
+    ctx.fillText(`PARADA ${i + 1} DE ${STOPS.length} · ${s.kicker.toUpperCase()}`, 10, 60);
+    ctx.fillStyle = C.ink; ctx.font = 'bold 86px Verdana, sans-serif';
+    ctx.fillText(s.title, 10, 170);
+  });
+}
+function textCanvas(body, repare, heading) {
+  return makeCanvas(1200, 560, (ctx, w, h) => {
+    ctx.fillStyle = 'rgba(26,36,30,0.94)'; roundRect(ctx, 0, 0, w, h, 28); ctx.fill();
+    let y = 70;
+    if (heading) { ctx.fillStyle = C.river; ctx.font = 'bold 46px Verdana, sans-serif'; ctx.fillText(heading, 44, y); y += 64; }
+    ctx.fillStyle = C.ink; ctx.font = '38px Verdana, sans-serif';
+    for (const l of wrap(ctx, body, w - 88)) { ctx.fillText(l, 44, y); y += 52; }
+    if (repare) {
+      y += 24; ctx.fillStyle = C.coffee; ctx.font = 'bold 30px Verdana, sans-serif'; ctx.fillText('REPARE', 44, y); y += 48;
+      ctx.fillStyle = C.muted; ctx.font = 'italic 36px Verdana, sans-serif';
+      for (const l of wrap(ctx, repare, w - 88)) { ctx.fillText(l, 44, y); y += 50; }
+    }
+  });
+}
+function buttonCanvas(label, active = true) {
+  return makeCanvas(520, 200, (ctx, w, h) => {
+    ctx.fillStyle = active ? '#E4EAE1' : 'rgba(228,234,225,0.25)'; roundRect(ctx, 6, 6, w - 12, h - 12, 90); ctx.fill();
+    ctx.fillStyle = '#122019'; ctx.font = 'bold 60px Verdana, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(label, w / 2, h / 2 + 4);
+  });
+}
+function button(label, pos, rot, onClick, active = true) {
+  const b = plane(1.3, 0.5, pos, rot);
+  b.addEventListener('loaded', () => panel(b, buttonCanvas(label, active)));
+  panel(b, buttonCanvas(label, active));
+  if (active) {
+    b.classList.add('clickable');
+    b.addEventListener('mouseenter', () => b.setAttribute('scale', '1.08 1.08 1'));
+    b.addEventListener('mouseleave', () => b.setAttribute('scale', '1 1 1'));
+    b.addEventListener('click', onClick);
+  }
+  return b;
+}
+
+function stopVideos() {
+  document.querySelectorAll('#vids video').forEach(v => { v.pause(); });
+}
+
+function render(i) {
+  current = (i + STOPS.length) % STOPS.length;
+  const s = STOPS[current];
+  stopVideos();
+  while (world.firstChild) world.removeChild(world.firstChild);
+
+  // Título no alto
+  const t = plane(4.4, 0.69, '0 1.85 -4');
+  panel(t, titleCanvas(s, current));
+
+  // Painel de texto abaixo, inclinado para leitura
+  const info = plane(2.6, 1.21, '0 -0.85 -2.6', '-28 0 0');
+  const draw = (h) => panel(info, h ? textCanvas(h.d, null, h.t) : textCanvas(s.text, s.repare));
+  draw();
+
+  if (s.type === 'pano') {
+    const R = 5, THETA = 120, H = R * (THETA * Math.PI / 180) / (1240 / 465);
+    const cyl = document.createElement('a-curvedimage');
+    cyl.setAttribute('src', '#i-pano'); cyl.setAttribute('radius', R); cyl.setAttribute('height', H);
+    cyl.setAttribute('theta-length', THETA); cyl.setAttribute('theta-start', 180 - THETA / 2);
+    cyl.setAttribute('scale', '-1 1 1'); cyl.setAttribute('position', '0 0.2 0');
+    world.appendChild(cyl);
+    t.setAttribute('position', `0 ${0.2 + H / 2 + 0.5} -4`);
+    HOTS.forEach((h, k) => {
+      const phi = (-THETA / 2 + (h.x / 100) * THETA) * Math.PI / 180;
+      const r = R * 0.94, y = 0.2 + (0.5 - h.y / 100) * H;
+      const dot = document.createElement('a-circle');
+      dot.setAttribute('radius', 0.2); dot.setAttribute('color', '#E0A64E');
+      dot.setAttribute('position', `${(r * Math.sin(phi)).toFixed(3)} ${y.toFixed(3)} ${(-r * Math.cos(phi)).toFixed(3)}`);
+      dot.setAttribute('rotation', `0 ${(-phi * 180 / Math.PI).toFixed(1)} 0`);
+      dot.setAttribute('animation', 'property: scale; dir: alternate; loop: true; dur: 900; to: 1.25 1.25 1');
+      dot.classList.add('clickable');
+      dot.addEventListener('click', () => draw(h));
+      world.appendChild(dot);
+    });
+  } else if (s.type === 'video') {
+    const v = document.getElementById(s.id);
+    const scr = document.createElement('a-video');
+    scr.setAttribute('src', '#' + s.id); scr.setAttribute('width', 4.4); scr.setAttribute('height', 2.475);
+    scr.setAttribute('position', s.extra ? '-1.2 0.3 -4' : '0 0.3 -4');
+    if (s.extra) scr.setAttribute('rotation', '0 12 0');
+    world.appendChild(scr);
+    v.currentTime = 0; v.play().catch(() => {});
+    if (s.extra) {
+      const im = document.createElement('a-image');
+      im.setAttribute('src', '#' + s.extra); im.setAttribute('width', 3.6); im.setAttribute('height', 2.25);
+      im.setAttribute('position', '3.1 0.3 -3.2'); im.setAttribute('rotation', '0 -35 0');
+      world.appendChild(im);
+    }
+  } else if (s.type === 'image') {
+    const im = document.createElement('a-image');
+    im.setAttribute('src', '#' + s.id); im.setAttribute('height', 2.475); im.setAttribute('width', 2.475 * s.ratio);
+    im.setAttribute('position', '0 0.3 -4');
+    world.appendChild(im);
+  }
+
+  // Navegação pelo olhar
+  button('‹ Anterior', '-1.9 -0.95 -2.4', '-28 25 0', () => render(current - 1), current > 0);
+  button(current === STOPS.length - 1 ? 'Recomeçar' : 'Próxima ›', '1.9 -0.95 -2.4', '-28 -25 0',
+    () => render(current === STOPS.length - 1 ? 0 : current + 1));
+}
+
+/* Entrada: libera giroscópio (iPhone) e vídeos antes do VR */
+async function unlock() {
+  try {
+    if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+      await DeviceOrientationEvent.requestPermission();
+    }
+  } catch (e) {}
+  const vids = [...document.querySelectorAll('#vids video')];
+  await Promise.all(vids.map(v => { const m = v.muted; v.muted = true; return v.play().then(() => { v.pause(); v.muted = m; }).catch(() => { v.muted = m; }); }));
+}
+function start(vr) {
+  unlock().then(() => {
+    document.getElementById('intro').hidden = true;
+    render(0);
+    if (vr) { try { scene.enterVR(); } catch (e) {} }
+  });
+}
+document.getElementById('go').addEventListener('click', () => start(true));
+document.getElementById('window').addEventListener('click', () => start(false));
+scene.addEventListener('exit-vr', () => { stopVideos(); document.getElementById('intro').hidden = false; });
+</script>
+</body>
+</html>
