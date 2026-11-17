@@ -1,0 +1,514 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Explorando a Catadupa</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: caderno de campo — mapa esquemático do percurso ao lado de um visor de paradas; linha do tempo abaixo. */
+:root {
+  --bg: #ECEFE7;        /* papel de caderno, verde-acinzentado */
+  --panel: #F6F7F2;
+  --ink: #17231C;       /* tinta verde-escura */
+  --muted: #55625A;
+  --line: #C9D0C2;
+  --river: #1D6A74;     /* acento: água do Formoso */
+  --river-soft: #D3E4E3;
+  --coffee: #9A6418;    /* marcador: café / pontos de interesse */
+  --forest: #3F6B45;
+  --forest-soft: #CFDCC9;
+  --on-accent: #F6F7F2;
+  --display: 'Bricolage Grotesque', 'Trebuchet MS', sans-serif;
+  --body: 'Atkinson Hyperlegible', Verdana, sans-serif;
+  --mono: 'IBM Plex Mono', 'Courier New', monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #121A15; --panel: #1A241E; --ink: #E4EAE1; --muted: #A2AFA5; --line: #33423A;
+    --river: #6FC0C8; --river-soft: #1E3A3D; --coffee: #E0A64E; --forest: #8DBB8F; --forest-soft: #24392A;
+    --on-accent: #0F1712; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #121A15; --panel: #1A241E; --ink: #E4EAE1; --muted: #A2AFA5; --line: #33423A;
+  --river: #6FC0C8; --river-soft: #1E3A3D; --coffee: #E0A64E; --forest: #8DBB8F; --forest-soft: #24392A;
+  --on-accent: #0F1712; color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 17px; line-height: 1.55;
+}
+.wrap {
+  max-width: 1240px; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 28px 56px;
+  display: flex; flex-direction: column; gap: 40px;
+}
+h1, h2, h3 { font-family: var(--display); margin: 0; text-wrap: balance; letter-spacing: -0.01em; }
+p { margin: 0; }
+.label { font-family: var(--mono); font-size: 12.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+
+/* Cabeçalho */
+header { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 16px 32px; border-bottom: 2px solid var(--ink); padding-bottom: 20px; }
+header .t { display: flex; flex-direction: column; gap: 8px; max-width: 46rem; }
+header h1 { font-size: clamp(2.2rem, 5.5vw, 3.6rem); font-weight: 700; line-height: 1; }
+header .sub { color: var(--muted); font-size: 1.05rem; max-width: 40rem; }
+.coords { display: flex; flex-direction: column; gap: 2px; text-align: right; font-family: var(--mono); font-size: 13px; color: var(--muted); }
+.coords b { color: var(--ink); font-weight: 500; }
+@media (max-width: 640px) { .coords { text-align: left; } }
+
+/* Percurso */
+.tour { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 28px; align-items: start; }
+@media (max-width: 980px) { .tour { grid-template-columns: minmax(0, 1fr); } }
+.side { display: flex; flex-direction: column; gap: 14px; position: sticky; top: calc(env(safe-area-inset-top, 0px) + 16px); }
+@media (max-width: 980px) { .side { position: static; } }
+.side h2 { font-size: 1.5rem; font-weight: 700; }
+.map { position: relative; width: 100%; max-width: 100%; aspect-ratio: 10 / 8; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.map svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.stopbtn {
+  position: absolute; transform: translate(-50%, -50%);
+  width: 38px; height: 38px; border-radius: 50%;
+  border: 2px solid var(--ink); background: var(--panel); color: var(--ink);
+  font-family: var(--mono); font-size: 14px; cursor: pointer; display: grid; place-items: center;
+  transition: background .15s, color .15s, transform .15s;
+}
+.stopbtn:hover { transform: translate(-50%, -50%) scale(1.08); }
+.stopbtn[aria-current="true"] { background: var(--river); border-color: var(--river); color: var(--on-accent); }
+.stopbtn.seen:not([aria-current="true"]) { background: var(--river-soft); }
+.stopbtn:focus-visible, button:focus-visible, .pano:focus-visible { outline: 3px solid var(--coffee); outline-offset: 2px; }
+.stopname { position: absolute; transform: translate(-50%, 0); font-size: 12.5px; font-weight: 700; color: var(--ink); white-space: nowrap; pointer-events: none; background: var(--panel); padding: 0 4px; border-radius: 3px; }
+@media (max-width: 560px) { .stopname { display: none; } }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 14px; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.sw { width: 14px; height: 14px; border-radius: 3px; display: inline-block; }
+.list { display: flex; flex-direction: column; border-top: 1px solid var(--line); }
+.list button { all: unset; cursor: pointer; display: grid; grid-template-columns: 2.2rem 1fr; gap: 8px; padding: 8px 4px; border-bottom: 1px solid var(--line); font-size: 15px; }
+.list button .n { font-family: var(--mono); color: var(--muted); }
+.list button[aria-current="true"] { color: var(--river); font-weight: 700; }
+.list button[aria-current="true"] .n { color: var(--river); }
+.list button:focus-visible { outline: 3px solid var(--coffee); }
+
+/* Visor */
+.viewer { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; overflow: hidden; display: flex; flex-direction: column; min-width: 0; }
+.stage { position: relative; background: #0E1410; aspect-ratio: 16 / 9; max-width: 100%; }
+.stage video, .stage > img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.stage .tag { position: absolute; left: 12px; top: 12px; background: rgba(14,20,16,.78); color: #EEF2EC; font-family: var(--mono); font-size: 12.5px; padding: 5px 10px; border-radius: 4px; letter-spacing: .06em; pointer-events: none; }
+.mediatabs { display: flex; gap: 6px; padding: 10px 16px 0; }
+.mediatabs button { font: inherit; font-size: 14px; border: 1px solid var(--line); background: transparent; color: var(--ink); padding: 4px 12px; border-radius: 999px; cursor: pointer; }
+.mediatabs button[aria-pressed="true"] { background: var(--ink); color: var(--panel); border-color: var(--ink); }
+.info { padding: 20px 22px 22px; display: flex; flex-direction: column; gap: 14px; }
+.info h3 { font-size: clamp(1.5rem, 3vw, 2rem); font-weight: 700; line-height: 1.1; }
+.info .txt { max-width: 62ch; }
+.repare { border-left: 4px solid var(--coffee); padding: 6px 0 6px 14px; display: flex; flex-direction: column; gap: 4px; max-width: 62ch; }
+.repare .label { color: var(--coffee); }
+.nav { display: flex; justify-content: space-between; gap: 12px; padding: 0 22px 22px; }
+.nav button { font: inherit; font-weight: 700; font-size: 15px; border: 2px solid var(--ink); background: transparent; color: var(--ink); padding: 8px 16px; border-radius: 4px; cursor: pointer; }
+.nav button.primary { background: var(--ink); color: var(--panel); }
+.nav button:disabled { opacity: .35; cursor: default; }
+
+/* Panorâmica */
+.pano { position: absolute; inset: 0; overflow: hidden; cursor: grab; touch-action: pan-y; user-select: none; }
+.pano.dragging { cursor: grabbing; }
+.pano .strip { position: absolute; top: 0; left: 0; height: 100%; will-change: transform; }
+.pano .strip img { height: 100%; width: auto; max-width: none; display: block; pointer-events: none; }
+.hot { position: absolute; transform: translate(-50%, -50%); width: 30px; height: 30px; border-radius: 50%; border: 2px solid #FFF8EA; background: #B8791F; color: #1A1206; font-family: var(--mono); font-size: 13px; cursor: pointer; display: grid; place-items: center; box-shadow: 0 0 0 4px rgba(184,121,31,.35); }
+.hot[aria-pressed="true"] { background: #FFF8EA; }
+@media (prefers-reduced-motion: no-preference) { .hot:not([aria-pressed="true"]) { animation: pulse 2.4s ease-in-out infinite; } }
+@keyframes pulse { 50% { box-shadow: 0 0 0 9px rgba(184,121,31,.1); } }
+.panohint { position: absolute; right: 12px; bottom: 12px; display: flex; gap: 6px; }
+.panohint button { width: 36px; height: 36px; border-radius: 50%; border: 0; background: rgba(14,20,16,.78); color: #EEF2EC; font-size: 18px; cursor: pointer; }
+.hotcard { background: var(--forest-soft); border-radius: 4px; padding: 12px 14px; display: flex; flex-direction: column; gap: 4px; max-width: 62ch; }
+.hotcard b { font-family: var(--display); font-size: 1.1rem; }
+
+/* Linha do tempo */
+.timeline { display: flex; flex-direction: column; gap: 18px; }
+.timeline .head { display: flex; flex-direction: column; gap: 6px; }
+.timeline h2 { font-size: clamp(1.6rem, 3.5vw, 2.2rem); font-weight: 700; }
+.timeline .head p { color: var(--muted); max-width: 60ch; }
+.rail { overflow-x: auto; padding-bottom: 6px; }
+.rail ol { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(8, minmax(118px, 1fr)); position: relative; min-width: 900px; }
+.rail ol::before { content: ""; position: absolute; left: 0; right: 0; top: 48px; height: 2px; background: var(--line); }
+.rail li button { all: unset; cursor: pointer; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; padding: 0 10px 0 0; width: 100%; }
+.rail .yr { font-family: var(--display); font-weight: 700; font-size: 1.35rem; font-variant-numeric: tabular-nums; }
+.rail .dot { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--ink); background: var(--panel); position: relative; z-index: 1; }
+.rail .kind { font-family: var(--mono); font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; padding: 2px 7px; border-radius: 3px; }
+.k-mata { background: var(--forest-soft); color: var(--forest); }
+.k-cafe { background: color-mix(in srgb, var(--coffee) 18%, transparent); color: var(--coffee); }
+.k-pasto { background: color-mix(in srgb, var(--muted) 18%, transparent); color: var(--muted); }
+.k-reserva { background: var(--river-soft); color: var(--river); }
+.rail li button[aria-current="true"] .dot { background: var(--river); border-color: var(--river); }
+.rail li button[aria-current="true"] .yr { color: var(--river); }
+.rail li button:focus-visible { outline: 3px solid var(--coffee); outline-offset: 4px; }
+.era { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 20px 22px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px 32px; }
+@media (max-width: 760px) { .era { grid-template-columns: minmax(0, 1fr); } }
+.era h3 { font-size: 1.45rem; font-weight: 700; }
+.era .col { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.era .scape { font-size: 15.5px; color: var(--muted); }
+
+.visit { background: var(--forest-soft); border-radius: 6px; padding: 24px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: 16px 32px; align-items: start; }
+@media (max-width: 760px) { .visit { grid-template-columns: minmax(0, 1fr); } }
+.visit .col { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.visit h2 { font-size: clamp(1.5rem, 3vw, 2rem); font-weight: 700; }
+.visit p { max-width: 60ch; }
+.visit a { color: var(--river); font-weight: 700; }
+footer { border-top: 1px solid var(--line); padding-top: 18px; display: flex; flex-direction: column; gap: 6px; font-size: 14px; color: var(--muted); }
+footer a { color: var(--river); }
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="t">
+      <span class="label">RPPN Fazenda Catadupa · São José do Barreiro, SP</span>
+      <h1>Explorando a Catadupa</h1>
+      <p class="sub">Para quem não pôde ir: um percurso pela reserva em oito paradas, da estrada até o Rio Formoso, feito com as fotos e vídeos da nossa visita em outubro de 2026. Toque nos números do mapa ou use os botões para avançar.</p>
+    </div>
+    <div class="coords" aria-label="Localização aproximada">
+      <span><b>≈ 22°39′ S · 44°32′ O</b></span>
+      <span>38,18 ha protegidos</span>
+      <span>Portaria ICMBio nº 52/2015</span>
+    </div>
+  </header>
+
+  <section class="tour" aria-label="Percurso pela fazenda">
+    <div class="side">
+      <h2>O percurso</h2>
+      <div class="map" id="map">
+        <svg viewBox="0 0 100 80" preserveAspectRatio="none" aria-hidden="true">
+          <path d="M70 58 C 80 52, 98 56, 100 62 L100 80 L52 80 C 54 70, 60 60, 70 58 Z" style="fill: var(--forest-soft)"/>
+          <path d="M54 80 C 66 74, 78 70, 100 70" style="fill:none; stroke: var(--river); stroke-width: 3; opacity: .55" vector-effect="non-scaling-stroke"/>
+          <rect x="18" y="20" width="56" height="34" rx="2" style="fill: none; stroke: var(--line); stroke-width: 1.5; stroke-dasharray: 4 3" vector-effect="non-scaling-stroke"/>
+          <path id="route" d="M8 14 C 16 22, 20 30, 26 40 S 36 28, 38 26 S 48 40, 50 44 S 62 30, 66 30 S 78 44, 76 50 S 66 62, 64 64 S 80 70, 86 72" style="fill:none; stroke: var(--ink); stroke-width: 2; stroke-dasharray: 2 5; stroke-linecap: round" vector-effect="non-scaling-stroke"/>
+        </svg>
+        <span class="stopname" style="left:46%; top:12%; color: var(--muted)">casarão e entorno</span>
+        <span class="stopname" style="left:57%; top:93%; color: var(--forest)">RPPN</span>
+      </div>
+      <div class="legend">
+        <span><i class="sw" style="background: var(--forest-soft)"></i>área da reserva</span>
+        <span><i class="sw" style="background: var(--river); opacity:.6"></i>Rio Formoso</span>
+        <span>esquema, fora de escala</span>
+      </div>
+      <div class="list" id="list" role="list"></div>
+    </div>
+
+    <article class="viewer" aria-live="polite">
+      <div class="stage" id="stage"></div>
+      <div class="mediatabs" id="tabs" hidden></div>
+      <div class="info">
+        <span class="label" id="kicker"></span>
+        <h3 id="title"></h3>
+        <p class="txt" id="text"></p>
+        <div class="hotcard" id="hotcard" hidden></div>
+        <div class="repare">
+          <span class="label">Repare</span>
+          <p id="repare"></p>
+        </div>
+      </div>
+      <div class="nav">
+        <button type="button" id="prev">← Anterior</button>
+        <button type="button" id="next" class="primary">Próxima parada →</button>
+      </div>
+    </article>
+  </section>
+
+  <section class="timeline" aria-label="Linha do tempo">
+    <div class="head">
+      <span class="label">A mesma terra, épocas diferentes</span>
+      <h2>Linha do tempo da paisagem</h2>
+      <p>Escolha uma época para ver o que acontecia na fazenda e na região, e como isso aparece na paisagem de hoje.</p>
+    </div>
+    <div class="rail"><ol id="rail"></ol></div>
+    <div class="era" id="era"></div>
+  </section>
+
+  <section class="visit" aria-label="Como visitar">
+    <div class="col">
+      <span class="label">Gostou?</span>
+      <h2>Para conhecer pessoalmente</h2>
+    </div>
+    <div class="col">
+      <p>O tour mostra muito, mas não substitui o som do rio e o cheiro da mata. A fazenda recebe grupos, estudantes e pesquisadores com agendamento prévio, a partir de 10 pessoas.</p>
+      <p><a href="https://barreiroturismo.com.br/associado/fazenda-catadupa/" target="_blank" rel="noopener">Ver como agendar uma visita</a></p>
+    </div>
+  </section>
+
+  <footer>
+    <p>Protótipo da proposta de extensão “Catadupa a um clique” — disciplina Educação Ambiental (ACH01005), USP EACH.</p>
+    <p>Fotos e vídeos: visita do grupo à Fazenda Catadupa, outubro de 2026. A panorâmica foi montada a partir de um vídeo gravado no caminho.</p>
+    <p>Fontes: <a href="https://simrppn.sisicmbio.icmbio.gov.br/uploads/ato-criacao/2015_11_06/Portaria_Catadupa.pdf" target="_blank" rel="noopener">Portaria ICMBio nº 52/2015</a> · <a href="https://barreiroturismo.com.br/associado/fazenda-catadupa/" target="_blank" rel="noopener">Barreiro Turismo</a> · <a href="https://frepesp.org.br/boranda-em-rppns-sp/" target="_blank" rel="noopener">FREPESP</a> · <a href="https://www.youtube.com/watch?v=A8GiQxYekUY" target="_blank" rel="noopener">Lugares da Nossa Região (vídeo)</a></p>
+  </footer>
+</div>
+
+<script>
+const STOPS = [
+  { id: 'estrada', short: 'Estrada', x: 8, y: 17.5, kicker: 'Antes de chegar',
+    title: 'Os morros contam a história',
+    text: 'No caminho até a fazenda, a paisagem já é uma aula. A Mata Atlântica do Vale do Paraíba foi derrubada no século XIX para plantar café. Quando o café foi embora, ficou o pasto. Arraste a imagem para olhar em volta e toque nos pontos laranja.',
+    repare: 'Onde a mata sobreviveu? Quase sempre nos topos e nas encostas mais íngremes, onde era difícil plantar ou pôr gado.',
+    media: [{ type: 'pano', src: 'media/panorama.jpg', label: 'Panorâmica' }] },
+  { id: 'chegada', short: 'Chegada', x: 26, y: 50, kicker: 'Casarão de 1831',
+    title: 'Chegada ao casarão',
+    text: 'A sede foi erguida em 1831, quando o Vale do Paraíba começava a ser a maior região produtora de café do país. Paredes caiadas, janelas com moldura colorida e o jardim chegando até a porta.',
+    repare: 'Compare o casarão com os morros de pasto da estrada. É a mesma terra: uma parte virou riqueza, outra virou desgaste.',
+    media: [{ type: 'video', src: 'media/chegada.mp4', poster: 'media/chegada.jpg', label: 'Vídeo' }] },
+  { id: 'recepcao', short: 'Recepção', x: 38, y: 32.5, kicker: 'Na porta do casarão',
+    title: 'Quem cuida da reserva',
+    text: 'Antes de entrar, a conversa com quem cuida da fazenda. A RPPN existe por decisão dos próprios donos, que moram no casarão e tocam a restauração. Ligue o som para ouvir a explicação.',
+    repare: 'Aqui quem conserva é uma família, não o governo. O que leva alguém a transformar parte da própria terra em reserva para sempre?',
+    media: [{ type: 'video', src: 'media/recepcao.mp4', poster: 'media/recepcao.jpg', label: 'Vídeo com áudio' }] },
+  { id: 'interior', short: 'Interior', x: 50, y: 55, kicker: 'Dentro do casarão',
+    title: 'Uma casa feita de mata',
+    text: 'Pé-direito alto, forro de tábuas, escada e corrimão de madeira. A casa guarda a escala de uma fazenda que já foi centro econômico da região.',
+    repare: 'Quanta madeira você vê nesta sala? De onde ela pode ter vindo, e o que havia naquele lugar antes?',
+    media: [{ type: 'video', src: 'media/interior.mp4', poster: 'media/interior.jpg', label: 'Vídeo' }] },
+  { id: 'salao', short: 'Salão de Memórias', x: 66, y: 37.5, kicker: 'Acervo',
+    title: 'Salão de Memórias',
+    text: 'Arreios, ferramentas, um moedor, bandejas com grãos de café, uma roda de carro de boi. Em outra parede, retratos e objetos indígenas. Natureza e cultura contadas no mesmo lugar.',
+    repare: 'Quem usava essas ferramentas? A história do café no Vale passa por povos indígenas e por pessoas escravizadas, que quase nunca aparecem nos relatos sobre as fazendas.',
+    media: [
+      { type: 'video', src: 'media/salao.mp4', poster: 'media/salao.jpg', label: 'Ferramentas' },
+      { type: 'img', src: 'media/acervo.jpg', label: 'Acervo indígena', alt: 'Parede com retratos de indígenas, cestaria, arco e ferramentas antigas' }
+    ] },
+  { id: 'jardim', short: 'Jardim', x: 76, y: 62.5, kicker: 'Ao redor da casa',
+    title: 'Onde o jardim vira mata',
+    text: 'Palmeiras, samambaias e plantas de folha larga cercam a casa e vão se misturando com a vegetação mais alta ao fundo.',
+    repare: 'Tente achar a linha onde termina o jardim e começa a mata. Ela existe?',
+    media: [{ type: 'video', src: 'media/jardim.mp4', poster: 'media/jardim.jpg', label: 'Vídeo' }] },
+  { id: 'portao', short: 'Portão da RPPN', x: 64, y: 80, kicker: 'Entrada da reserva',
+    title: 'O portão da RPPN',
+    text: 'A placa marca o início dos 38,18 ha protegidos em caráter perpétuo. Pela lei do SNUC, dentro de uma RPPN só são permitidas pesquisa científica e visitação com fins turísticos, recreativos e educacionais.',
+    repare: 'O que muda quando atravessamos este portão? O que você pode e o que não pode fazer do lado de dentro?',
+    media: [{ type: 'img', src: 'media/portao.jpg', label: 'Foto', alt: 'Placa de Reserva Particular do Patrimônio Natural presa a um portão azul de madeira' }] },
+  { id: 'rio', short: 'Rio Formoso', x: 86, y: 90, kicker: 'Dentro da reserva',
+    title: 'O Rio Formoso',
+    text: '“Catadupa” quer dizer queda d’água. O nome vem da cachoeira dupla que o Rio Formoso forma na propriedade, descrita pelo viajante Augusto Emílio Zaluar em 1860. A mata nas margens protege a água e segura o solo.',
+    repare: 'Ligue o som. O que a mata ciliar faz por este rio? E o que aconteceria com ele se as margens virassem pasto?',
+    media: [{ type: 'video', src: 'media/rio.mp4', poster: 'media/rio.jpg', label: 'Vídeo com áudio' }] }
+];
+
+/* Pontos da panorâmica: posição em % da imagem (largura, altura). */
+const HOTS = [
+  { x: 43, y: 40, t: 'Pasto', d: 'Capim onde antes havia mata e, depois, café. O solo exposto e pisoteado perde fertilidade e sofre erosão.' },
+  { x: 81, y: 31, t: 'Mata no topo do morro', d: 'Fragmento de floresta que sobrou no alto. Topos de morro são Áreas de Preservação Permanente: protegem nascentes e evitam deslizamentos.' },
+  { x: 53, y: 63, t: 'Capoeira', d: 'Arbustos e árvores jovens crescendo no pasto abandonado. É a mata começando a voltar sozinha: regeneração natural.' },
+  { x: 9, y: 70, t: 'Árvores de borda', d: 'Árvores pioneiras na beira da estrada. Crescem rápido, gostam de sol e preparam o terreno para espécies de mata fechada.' },
+  { x: 15, y: 14, t: 'Encosta com mata', d: 'Na encosta mais íngreme a mata é contínua. Onde era difícil plantar ou criar gado, a floresta resistiu.' }
+];
+
+const ERAS = [
+  { yr: '1831', kind: 'cafe', kl: 'Café', title: 'Fundação da fazenda',
+    what: 'A sede da Catadupa é construída. O Vale do Paraíba entra no auge do café, abastecido por estradas que ligavam a região ao Rio de Janeiro.',
+    scape: 'Na paisagem de hoje: o casarão e o Salão de Memórias.' },
+  { yr: 'c. 1850', kind: 'cafe', kl: 'Café', title: 'Auge do café',
+    what: 'A mata dos morros é derrubada e queimada para abrir cafezais. O trabalho nas fazendas era feito por pessoas escravizadas.',
+    scape: 'Na paisagem de hoje: os morros sem floresta que você vê da estrada.' },
+  { yr: '1860', kind: 'mata', kl: 'Registro', title: 'Zaluar passa pela Catadupa',
+    what: 'O viajante Augusto Emílio Zaluar descreve a fazenda e a cachoeira dupla do Rio Formoso, que dá nome ao lugar.',
+    scape: 'Na paisagem de hoje: a mesma queda d’água, dentro da RPPN.' },
+  { yr: '1888', kind: 'pasto', kl: 'Declínio', title: 'O café vai embora',
+    what: 'Com o solo esgotado e o fim da escravidão, o café migra para o oeste paulista. O Vale do Paraíba entra em decadência.',
+    scape: 'Na paisagem de hoje: as “cidades mortas” do Vale Histórico, como descreveu Monteiro Lobato.' },
+  { yr: '1900+', kind: 'pasto', kl: 'Pasto', title: 'Morros de gado',
+    what: 'Os antigos cafezais viram pasto. A criação de gado ocupa a região durante boa parte do século XX.',
+    scape: 'Na paisagem de hoje: o capim e as trilhas de gado nas encostas.' },
+  { yr: '1971', kind: 'reserva', kl: 'Proteção', title: 'Parque Nacional da Serra da Bocaina',
+    what: 'É criado o parque nacional vizinho, com sede em São José do Barreiro, protegendo um grande bloco de Mata Atlântica na serra.',
+    scape: 'Na paisagem de hoje: a serra coberta de floresta no horizonte.' },
+  { yr: '2015', kind: 'reserva', kl: 'Proteção', title: 'Nasce a RPPN Fazenda Catadupa',
+    what: 'Por decisão dos proprietários, 38,18 ha da fazenda são reconhecidos pelo ICMBio como reserva particular, para sempre.',
+    scape: 'Na paisagem de hoje: a placa no portão e a mata ao longo do rio.' },
+  { yr: 'Hoje', kind: 'mata', kl: 'Regeneração', title: 'Restauração e visitas',
+    what: 'O casarão está em restauração e a fazenda recebe grupos agendados para atividades educativas. Nos pastos abandonados, a capoeira avança.',
+    scape: 'Na paisagem de hoje: você, fazendo este percurso.' }
+];
+
+const $ = (id) => document.getElementById(id);
+const map = $('map'), list = $('list'), stage = $('stage'), tabs = $('tabs'), hotcard = $('hotcard');
+let current = 0;
+const viewer = document.querySelector('.viewer');
+function reveal() {
+  if (window.matchMedia('(max-width: 980px)').matches) {
+    const smooth = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    viewer.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'start' });
+  }
+}
+const seen = new Set();
+
+STOPS.forEach((s, i) => {
+  const b = document.createElement('button');
+  b.className = 'stopbtn'; b.type = 'button';
+  b.style.left = s.x + '%'; b.style.top = s.y + '%';
+  b.textContent = i + 1;
+  b.setAttribute('aria-label', `Parada ${i + 1}: ${s.short}`);
+  b.addEventListener('click', () => { go(i); reveal(); });
+  map.appendChild(b);
+  const n = document.createElement('span');
+  n.className = 'stopname'; n.textContent = s.short;
+  n.style.left = s.x + '%'; n.style.top = s.y > 85 ? `calc(${s.y}% - 44px)` : `calc(${s.y}% + 22px)`;
+  map.appendChild(n);
+  const li = document.createElement('button');
+  li.type = 'button'; li.setAttribute('role', 'listitem');
+  li.innerHTML = `<span class="n">${String(i + 1).padStart(2, '0')}</span><span>${s.short}</span>`;
+  li.addEventListener('click', () => { go(i); reveal(); });
+  list.appendChild(li);
+});
+
+function renderMedia(m, s) {
+  stage.innerHTML = '';
+  hotcard.hidden = true;
+  if (m.type === 'video') {
+    const v = document.createElement('video');
+    v.src = m.src; v.poster = m.poster; v.controls = true; v.playsInline = true; v.preload = 'metadata';
+    v.setAttribute('aria-label', s.title);
+    stage.appendChild(v);
+  } else if (m.type === 'img') {
+    const im = document.createElement('img');
+    im.src = m.src; im.alt = m.alt || s.title;
+    stage.appendChild(im);
+  } else if (m.type === 'pano') {
+    buildPano(m.src);
+  }
+  const tag = document.createElement('span');
+  tag.className = 'tag';
+  tag.textContent = `PARADA ${String(current + 1).padStart(2, '0')} / ${String(STOPS.length).padStart(2, '0')}`;
+  stage.appendChild(tag);
+}
+
+function go(i) {
+  current = Math.max(0, Math.min(STOPS.length - 1, i));
+  const s = STOPS[current];
+  seen.add(current);
+  $('kicker').textContent = s.kicker;
+  $('title').textContent = s.title;
+  $('text').textContent = s.text;
+  $('repare').textContent = s.repare;
+  tabs.innerHTML = '';
+  tabs.hidden = s.media.length < 2;
+  s.media.forEach((m, k) => {
+    const t = document.createElement('button');
+    t.type = 'button'; t.textContent = m.label;
+    t.setAttribute('aria-pressed', k === 0 ? 'true' : 'false');
+    t.addEventListener('click', () => {
+      [...tabs.children].forEach(c => c.setAttribute('aria-pressed', 'false'));
+      t.setAttribute('aria-pressed', 'true');
+      renderMedia(m, s);
+    });
+    tabs.appendChild(t);
+  });
+  renderMedia(s.media[0], s);
+  map.querySelectorAll('.stopbtn').forEach((b, k) => {
+    b.setAttribute('aria-current', k === current ? 'true' : 'false');
+    b.classList.toggle('seen', seen.has(k));
+  });
+  [...list.children].forEach((b, k) => b.setAttribute('aria-current', k === current ? 'true' : 'false'));
+  $('prev').disabled = current === 0;
+  $('next').disabled = current === STOPS.length - 1;
+  $('next').textContent = current === STOPS.length - 1 ? 'Fim do percurso' : 'Próxima parada →';
+  if (location.hash.slice(1) !== s.id) history.replaceState(null, '', '#' + s.id);
+}
+
+$('prev').addEventListener('click', () => go(current - 1));
+$('next').addEventListener('click', () => go(current + 1));
+
+/* Panorâmica arrastável */
+function buildPano(src) {
+  const pano = document.createElement('div');
+  pano.className = 'pano'; pano.tabIndex = 0;
+  pano.setAttribute('role', 'region');
+  pano.setAttribute('aria-label', 'Panorâmica dos morros. Arraste ou use as setas do teclado para olhar em volta.');
+  const strip = document.createElement('div'); strip.className = 'strip';
+  const img = document.createElement('img'); img.src = src; img.alt = 'Morros com pasto, manchas de mata e capoeira, vistos da estrada para a fazenda';
+  strip.appendChild(img);
+  HOTS.forEach((h, k) => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'hot'; b.textContent = k + 1;
+    b.style.left = h.x + '%'; b.style.top = h.y + '%';
+    b.setAttribute('aria-label', h.t); b.setAttribute('aria-pressed', 'false');
+    b.addEventListener('click', (e) => {
+      e.stopPropagation();
+      strip.querySelectorAll('.hot').forEach(o => o.setAttribute('aria-pressed', 'false'));
+      b.setAttribute('aria-pressed', 'true');
+      hotcard.hidden = false;
+      hotcard.innerHTML = `<b>${k + 1} · ${h.t}</b><span>${h.d}</span>`;
+    });
+    strip.appendChild(b);
+  });
+  pano.appendChild(strip);
+  const ctr = document.createElement('div'); ctr.className = 'panohint';
+  ctr.innerHTML = '<button type="button" aria-label="Olhar para a esquerda">←</button><button type="button" aria-label="Olhar para a direita">→</button>';
+  stage.appendChild(pano);
+  stage.appendChild(ctr);
+
+  let x = 0, min = 0, startX = 0, startPos = 0, dragging = false, moved = false;
+  const clamp = (v) => Math.max(min, Math.min(0, v));
+  const apply = () => { strip.style.transform = `translateX(${x}px)`; };
+  function layout() {
+    const w = strip.getBoundingClientRect().width, pw = pano.clientWidth;
+    min = Math.min(0, pw - w);
+    if (!layout.done) { x = min / 2; layout.done = true; }
+    x = clamp(x); apply();
+  }
+  img.complete ? layout() : img.addEventListener('load', layout);
+  new ResizeObserver(layout).observe(pano);
+  const nudge = (d) => {
+    strip.style.transition = 'transform .35s ease';
+    x = clamp(x + d); apply();
+    setTimeout(() => { strip.style.transition = ''; }, 360);
+  };
+  ctr.children[0].addEventListener('click', () => nudge(pano.clientWidth * 0.4));
+  ctr.children[1].addEventListener('click', () => nudge(-pano.clientWidth * 0.4));
+  pano.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowLeft') { nudge(80); e.preventDefault(); }
+    if (e.key === 'ArrowRight') { nudge(-80); e.preventDefault(); }
+  });
+  pano.addEventListener('pointerdown', (e) => {
+    if (e.target.closest('.hot')) return;
+    dragging = true; moved = false; startX = e.clientX; startPos = x;
+    pano.setPointerCapture(e.pointerId); pano.classList.add('dragging');
+  });
+  pano.addEventListener('pointermove', (e) => {
+    if (!dragging) return;
+    const dx = e.clientX - startX;
+    if (Math.abs(dx) > 3) moved = true;
+    x = clamp(startPos + dx); apply();
+  });
+  const end = () => { dragging = false; pano.classList.remove('dragging'); };
+  pano.addEventListener('pointerup', end);
+  pano.addEventListener('pointercancel', end);
+}
+
+/* Linha do tempo */
+const rail = $('rail'), era = $('era');
+function pickEra(i) {
+  const e = ERAS[i];
+  era.innerHTML = `<div class="col"><span class="label">${e.yr} · ${e.kl}</span><h3>${e.title}</h3></div>
+    <div class="col"><p>${e.what}</p><p class="scape">${e.scape}</p></div>`;
+  [...rail.querySelectorAll('button')].forEach((b, k) => b.setAttribute('aria-current', k === i ? 'true' : 'false'));
+}
+ERAS.forEach((e, i) => {
+  const li = document.createElement('li');
+  li.innerHTML = `<button type="button"><span class="yr">${e.yr}</span><span class="dot"></span><span class="kind k-${e.kind}">${e.kl}</span></button>`;
+  li.querySelector('button').addEventListener('click', () => pickEra(i));
+  rail.appendChild(li);
+});
+
+const startIdx = Math.max(0, STOPS.findIndex(s => s.id === location.hash.slice(1)));
+go(startIdx);
+pickEra(0);
+window.addEventListener('hashchange', () => {
+  const k = STOPS.findIndex(s => s.id === location.hash.slice(1));
+  if (k >= 0 && k !== current) go(k);
+});
+</script>
+
+</body>
+</html>
