@@ -194,11 +194,11 @@ function render(i) {
   while (world.firstChild) world.removeChild(world.firstChild);
 
   // Título no alto
-  const t = plane(4.4, 0.69, '0 1.85 -4');
+  const t = plane(4.4, 0.69, '0 2.15 -3.6');
   panel(t, titleCanvas(s, current));
 
   // Painel de texto abaixo, inclinado para leitura
-  const info = plane(2.6, 1.21, '0 -0.85 -2.6', '-28 0 0');
+  const info = plane(2.6, 1.21, '0 -1.45 -2.2', '-40 0 0');
   const draw = (h) => panel(info, h ? textCanvas(h.d, null, h.t) : textCanvas(s.text, s.repare));
   draw();
 
@@ -225,27 +225,27 @@ function render(i) {
   } else if (s.type === 'video') {
     const v = document.getElementById(s.id);
     const scr = document.createElement('a-video');
-    scr.setAttribute('src', '#' + s.id); scr.setAttribute('width', 4.4); scr.setAttribute('height', 2.475);
-    scr.setAttribute('position', s.extra ? '-1.2 0.3 -4' : '0 0.3 -4');
+    scr.setAttribute('src', '#' + s.id); scr.setAttribute('width', 4.8); scr.setAttribute('height', 2.7);
+    scr.setAttribute('position', s.extra ? '-1.3 0.45 -3.6' : '0 0.45 -3.6');
     if (s.extra) scr.setAttribute('rotation', '0 12 0');
     world.appendChild(scr);
     v.currentTime = 0; v.play().catch(() => {});
     if (s.extra) {
       const im = document.createElement('a-image');
       im.setAttribute('src', '#' + s.extra); im.setAttribute('width', 3.6); im.setAttribute('height', 2.25);
-      im.setAttribute('position', '3.1 0.3 -3.2'); im.setAttribute('rotation', '0 -35 0');
+      im.setAttribute('position', '3.2 0.45 -2.9'); im.setAttribute('rotation', '0 -40 0');
       world.appendChild(im);
     }
   } else if (s.type === 'image') {
     const im = document.createElement('a-image');
-    im.setAttribute('src', '#' + s.id); im.setAttribute('height', 2.475); im.setAttribute('width', 2.475 * s.ratio);
-    im.setAttribute('position', '0 0.3 -4');
+    im.setAttribute('src', '#' + s.id); im.setAttribute('height', 2.7); im.setAttribute('width', 2.7 * s.ratio);
+    im.setAttribute('position', '0 0.45 -3.6');
     world.appendChild(im);
   }
 
   // Navegação pelo olhar
-  button('‹ Anterior', '-1.9 -0.95 -2.4', '-28 25 0', () => render(current - 1), current > 0);
-  button(current === STOPS.length - 1 ? 'Recomeçar' : 'Próxima ›', '1.9 -0.95 -2.4', '-28 -25 0',
+  button('‹ Anterior', '-1.95 -1.3 -2.1', '-38 25 0', () => render(current - 1), current > 0);
+  button(current === STOPS.length - 1 ? 'Recomeçar' : 'Próxima ›', '1.95 -1.3 -2.1', '-38 -25 0',
     () => render(current === STOPS.length - 1 ? 0 : current + 1));
 }
 
