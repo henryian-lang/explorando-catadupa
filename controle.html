@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Controle · Explorando a Catadupa</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700&family=Atkinson+Hyperlegible:wght@400;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<script src="https://cdn.jsdelivr.net/npm/mqtt@5.10.0/dist/mqtt.min.js"></script>
+<style>
+/* Layout: painel do apresentador — paradas à esquerda, ações e notas à direita */
+:root {
+  --bg: #121A15; --panel: #1A241E; --ink: #E4EAE1; --muted: #A2AFA5; --line: #33423A;
+  --river: #6FC0C8; --coffee: #E0A64E; --on: #0F1712; --ok: #8DBB8F; --warn: #E0A64E;
+  --display: 'Bricolage Grotesque', 'Trebuchet MS', sans-serif;
+  --body: 'Atkinson Hyperlegible', Verdana, sans-serif;
+  --mono: 'IBM Plex Mono', 'Courier New', monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 17px; line-height: 1.5; }
+.wrap { max-width: 1100px; margin: 0 auto; padding-block: 24px 48px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: flex; flex-direction: column; gap: 24px; }
+h1, h2 { font-family: var(--display); margin: 0; }
+h1 { font-size: clamp(1.6rem, 4vw, 2.3rem); }
+.label { font-family: var(--mono); font-size: 12.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+button { font: inherit; cursor: pointer; }
+button:focus-visible, input:focus-visible { outline: 3px solid var(--coffee); outline-offset: 2px; }
+
+header { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: end; justify-content: space-between; border-bottom: 2px solid var(--ink); padding-bottom: 16px; }
+.conn { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.conn input { font-family: var(--mono); font-size: 1.6rem; width: 7.5rem; letter-spacing: .25em; text-align: center; background: var(--panel); color: var(--coffee); border: 2px solid var(--line); border-radius: 6px; padding: 6px 8px; }
+.conn button { background: var(--river); color: var(--on); border: 0; border-radius: 6px; padding: 10px 18px; font-weight: 700; }
+.pill { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; padding: 4px 12px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); }
+.pill i { width: 10px; height: 10px; border-radius: 50%; background: var(--muted); display: inline-block; }
+.pill.ok { color: var(--ok); border-color: var(--ok); } .pill.ok i { background: var(--ok); }
+.pill.wait { color: var(--warn); border-color: var(--warn); } .pill.wait i { background: var(--warn); }
+
+.grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 24px; align-items: start; }
+@media (max-width: 860px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+.stops { display: flex; flex-direction: column; gap: 6px; }
+.stops button { display: grid; grid-template-columns: 2.4rem 1fr; gap: 8px; align-items: center; text-align: left; background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; }
+.stops button .n { font-family: var(--mono); color: var(--muted); }
+.stops button[aria-current="true"] { background: var(--river); color: var(--on); border-color: var(--river); font-weight: 700; }
+.stops button[aria-current="true"] .n { color: var(--on); }
+
+.side { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+.now { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 18px 20px; display: flex; flex-direction: column; gap: 10px; }
+.now h2 { font-size: 1.7rem; line-height: 1.1; }
+.now .rep { border-left: 4px solid var(--coffee); padding-left: 12px; color: var(--muted); }
+.row { display: flex; flex-wrap: wrap; gap: 10px; }
+.big { flex: 1 1 10rem; background: var(--ink); color: var(--on); border: 0; border-radius: 6px; padding: 16px; font-weight: 700; font-size: 1.1rem; }
+.sec { flex: 1 1 8rem; background: transparent; color: var(--ink); border: 2px solid var(--ink); border-radius: 6px; padding: 10px 12px; font-weight: 700; }
+.hots { display: flex; flex-wrap: wrap; gap: 8px; }
+.hots button { background: transparent; color: var(--coffee); border: 2px solid var(--coffee); border-radius: 999px; padding: 6px 14px; font-weight: 700; }
+.hots button[aria-pressed="true"] { background: var(--coffee); color: var(--on); }
+.hint { font-size: 14px; color: var(--muted); }
+kbd { font-family: var(--mono); font-size: 13px; border: 1px solid var(--line); border-radius: 4px; padding: 1px 6px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <span class="label">Explorando a Catadupa · óculos VR</span>
+      <h1>Controle do apresentador</h1>
+    </div>
+    <form class="conn" id="form">
+      <label for="code" class="label">Código do celular</label>
+      <input id="code" inputmode="numeric" maxlength="4" pattern="[0-9]{4}" placeholder="0000" autocomplete="off" required>
+      <button type="submit">Conectar</button>
+      <span class="pill" id="pill"><i></i><span id="ptext">Desconectado</span></span>
+    </form>
+  </header>
+
+  <p class="hint" id="help">No celular, abra <b>henryian-lang.github.io/explorando-catadupa/vr.html</b>. Ele mostra um código de 4 números: digite aqui e clique em Conectar. Depois toque em <b>Entrar no óculos</b> no celular e encaixe no VR Box.</p>
+
+  <div class="grid">
+    <div class="stops" id="stops" role="list" aria-label="Paradas"></div>
+    <div class="side">
+      <div class="row">
+        <button type="button" class="sec" id="prev">← Anterior</button>
+        <button type="button" class="big" id="next">Próxima parada →</button>
+      </div>
+      <div class="now">
+        <span class="label" id="kick"></span>
+        <h2 id="title"></h2>
+        <p id="text"></p>
+        <p class="rep" id="rep"></p>
+        <div id="hotbox" hidden>
+          <span class="label">Pontos da paisagem: mostrar no óculos</span>
+          <div class="hots" id="hots"></div>
+        </div>
+        <div class="row" id="vidbox" hidden>
+          <button type="button" class="sec" id="play">▶ Tocar</button>
+          <button type="button" class="sec" id="pause">❚❚ Pausar</button>
+          <button type="button" class="sec" id="restart">↺ Do início</button>
+        </div>
+      </div>
+      <div class="row">
+        <button type="button" class="sec" id="center">◎ Centralizar a visão</button>
+      </div>
+      <p class="hint">Use <b>Centralizar</b> quando a pessoa estiver olhando para o lado e o conteúdo ficar fora da vista: ele gira para a frente dela. Atalhos: <kbd>→</kbd> próxima, <kbd>←</kbd> anterior, <kbd>C</kbd> centralizar, <kbd>espaço</kbd> tocar/pausar.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+const STOPS = [
+  { short: 'Estrada', kicker: 'Antes de chegar', title: 'Os morros contam a história', type: 'pano',
+    text: 'A Mata Atlântica do Vale do Paraíba foi derrubada no século XIX para plantar café. Quando o café foi embora, ficou o pasto.',
+    repare: 'Onde a mata sobreviveu? Quase sempre nos topos e nas encostas mais íngremes.' },
+  { short: 'Chegada', kicker: 'Casarão de 1831', title: 'Chegada ao casarão', type: 'video',
+    text: 'A sede foi erguida em 1831, quando o Vale do Paraíba começava a ser a maior região produtora de café do país.',
+    repare: 'Compare o casarão com os morros de pasto da estrada: a mesma terra, dois destinos.' },
+  { short: 'Recepção', kicker: 'Na porta do casarão', title: 'Quem cuida da reserva', type: 'video',
+    text: 'A RPPN existe por decisão dos próprios donos, que moram no casarão e tocam a restauração. Vídeo com som.',
+    repare: 'O que leva alguém a transformar parte da própria terra em reserva para sempre?' },
+  { short: 'Interior', kicker: 'Dentro do casarão', title: 'Uma casa feita de mata', type: 'video',
+    text: 'Pé-direito alto, forro de tábuas, escada e corrimão de madeira.',
+    repare: 'Quanta madeira você vê aqui? O que havia no lugar de onde ela veio?' },
+  { short: 'Salão de Memórias', kicker: 'Acervo', title: 'Salão de Memórias', type: 'video',
+    text: 'Arreios, ferramentas, um moedor e grãos de café. À direita no óculos, retratos e objetos indígenas.',
+    repare: 'Quem usava essas ferramentas? A história do café passa por indígenas e pessoas escravizadas.' },
+  { short: 'Jardim', kicker: 'Ao redor da casa', title: 'Onde o jardim vira mata', type: 'video',
+    text: 'Palmeiras, samambaias e plantas de folha larga se misturam com a vegetação mais alta ao fundo.',
+    repare: 'Onde termina o jardim e começa a mata? Essa linha existe?' },
+  { short: 'Portão da RPPN', kicker: 'Entrada da reserva', title: 'O portão da RPPN', type: 'image',
+    text: 'Aqui começam os 38,18 ha protegidos para sempre. Numa RPPN só são permitidas pesquisa e visitação educativa, turística ou recreativa.',
+    repare: 'O que muda quando atravessamos este portão?' },
+  { short: 'Rio Formoso', kicker: 'Dentro da reserva', title: 'O Rio Formoso', type: 'video',
+    text: '“Catadupa” quer dizer queda d’água: o rio forma uma cachoeira dupla na fazenda. Vídeo com som.',
+    repare: 'O que aconteceria com o rio se as margens virassem pasto?' }
+];
+const HOTS = ['Pasto', 'Mata no topo', 'Capoeira', 'Árvores de borda', 'Encosta com mata'];
+
+const $ = (id) => document.getElementById(id);
+let current = 0, client = null, topic = null, lastSeen = 0, playing = null;
+
+STOPS.forEach((s, i) => {
+  const b = document.createElement('button');
+  b.type = 'button'; b.setAttribute('role', 'listitem');
+  b.innerHTML = `<span class="n">${String(i + 1).padStart(2, '0')}</span><span>${s.short}</span>`;
+  b.addEventListener('click', () => send({ a: 'goto', i }, i));
+  $('stops').appendChild(b);
+});
+HOTS.forEach((h, k) => {
+  const b = document.createElement('button');
+  b.type = 'button'; b.textContent = `${k + 1} · ${h}`; b.setAttribute('aria-pressed', 'false');
+  b.addEventListener('click', () => send({ a: 'hot', k }));
+  $('hots').appendChild(b);
+});
+
+function show(i, hot) {
+  current = (i + STOPS.length) % STOPS.length;
+  const s = STOPS[current];
+  $('kick').textContent = `Parada ${current + 1} de ${STOPS.length} · ${s.kicker}`;
+  $('title').textContent = s.title;
+  $('text').textContent = s.text;
+  $('rep').textContent = 'Repare: ' + s.repare;
+  $('hotbox').hidden = s.type !== 'pano';
+  $('vidbox').hidden = s.type !== 'video';
+  [...$('stops').children].forEach((b, k) => b.setAttribute('aria-current', k === current ? 'true' : 'false'));
+  [...$('hots').children].forEach((b, k) => b.setAttribute('aria-pressed', k === hot ? 'true' : 'false'));
+}
+
+function setPill(state, text) {
+  $('pill').className = 'pill ' + (state || '');
+  $('ptext').textContent = text;
+}
+
+function send(msg, optimistic) {
+  if (!client || !client.connected) { setPill('wait', 'Conecte primeiro com o código'); return; }
+  client.publish(topic + '/cmd', JSON.stringify(msg));
+  if (typeof optimistic === 'number') show(optimistic);
+}
+
+$('form').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const code = $('code').value.trim();
+  if (!/^\d{4}$/.test(code)) { setPill('wait', 'O código tem 4 números'); return; }
+  if (client) { try { client.end(true); } catch (err) {} }
+  topic = `explorando-catadupa/v1/${code}`;
+  setPill('wait', 'Procurando o celular…');
+  client = mqtt.connect('wss://broker.hivemq.com:8884/mqtt', { clientId: 'cat-ctl-' + code + '-' + Math.random().toString(16).slice(2, 8), reconnectPeriod: 3000, connectTimeout: 8000 });
+  client.on('connect', () => {
+    client.subscribe(topic + '/status');
+    client.publish(topic + '/cmd', JSON.stringify({ a: 'ping' }));
+  });
+  client.on('message', (t, buf) => {
+    let m; try { m = JSON.parse(buf.toString()); } catch (err) { return; }
+    lastSeen = Date.now(); playing = m.playing;
+    setPill('ok', 'Celular conectado');
+    show(m.i, m.hot);
+  });
+  client.on('offline', () => setPill('wait', 'Sem internet no notebook'));
+  client.on('error', () => setPill('wait', 'Não foi possível conectar nesta rede'));
+});
+
+setInterval(() => {
+  if (client && client.connected && lastSeen && Date.now() - lastSeen > 12000) setPill('wait', 'Celular sem resposta: verifique a internet dele');
+}, 3000);
+
+$('next').addEventListener('click', () => send({ a: 'next' }, current + 1));
+$('prev').addEventListener('click', () => send({ a: 'prev' }, current - 1));
+$('play').addEventListener('click', () => send({ a: 'play' }));
+$('pause').addEventListener('click', () => send({ a: 'pause' }));
+$('restart').addEventListener('click', () => send({ a: 'restart' }));
+$('center').addEventListener('click', () => send({ a: 'center' }));
+document.addEventListener('keydown', (e) => {
+  if (e.target.tagName === 'INPUT') return;
+  if (e.key === 'ArrowRight') { send({ a: 'next' }, current + 1); e.preventDefault(); }
+  if (e.key === 'ArrowLeft') { send({ a: 'prev' }, current - 1); e.preventDefault(); }
+  if (e.key === 'c' || e.key === 'C') send({ a: 'center' });
+  if (e.key === ' ') { send({ a: playing ? 'pause' : 'play' }); e.preventDefault(); }
+});
+show(0);
+</script>
+</body>
+</html>
