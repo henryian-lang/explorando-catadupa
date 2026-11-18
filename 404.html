@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Explorando a Catadupa</title>
+<script>
+  // Corrige links copiados com pontuação ou espaços no fim (ex.: "vr.html." ou "controle.html,")
+  (function () {
+    var base = '/explorando-catadupa/';
+    var path = decodeURIComponent(location.pathname).replace(/[\s.,;:!?)\]"'»”]+$/, '');
+    var page = path.slice(path.lastIndexOf('/') + 1).toLowerCase();
+    var known = { 'vr.html': 'vr.html', 'vr': 'vr.html', 'controle.html': 'controle.html', 'controle': 'controle.html', 'index.html': '', '': '' };
+    var target = base + (page in known ? known[page] : '');
+    location.replace(target + location.search + location.hash);
+  })();
+</script>
+<style>body{margin:0;background:#121A15;color:#E4EAE1;font-family:Verdana,sans-serif;display:grid;place-items:center;height:100vh;text-align:center}a{color:#6FC0C8}</style>
+</head>
+<body>
+<p>Abrindo o tour… <a href="/explorando-catadupa/">toque aqui se não abrir</a></p>
+</body>
+</html>
