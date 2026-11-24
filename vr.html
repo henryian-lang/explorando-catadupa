@@ -357,7 +357,10 @@ async function unlock() {
     }
   } catch (e) {}
   const vids = [...document.querySelectorAll('#vids video')];
-  await Promise.all(vids.map(v => { const m = v.muted; v.muted = true; return v.play().then(() => { v.pause(); v.muted = m; }).catch(() => { v.muted = m; }); }));
+  const all = Promise.all(vids.map(v => { const m = v.muted; v.muted = true; return v.play().then(() => { v.pause(); v.muted = m; }).catch(() => { v.muted = m; }); }));
+  // não espera mais que 1,5 s: se algum vídeo demorar a carregar, o tour abre mesmo assim
+  await Promise.race([all, new Promise(r => setTimeout(r, 1500))]);
+  vids.forEach(v => { if (v.id !== 'v-recepcao' && v.id !== 'v-rio') v.muted = true; else v.muted = false; });
 }
 function start(vr) {
   unlock().then(() => {
