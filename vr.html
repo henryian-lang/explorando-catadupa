@@ -255,8 +255,8 @@ function stopVideos() {
 const VALE = new Set(['Areias', 'Arapeí', 'Bananal', 'Queluz', 'São José do Barreiro', 'Silveiras']);
 const SJB = 'São José do Barreiro';
 const VIEWS = {
-  estado: { bb: [-53.3, -25.5, -43.4, -19.6], scale: 100, labels: [['MINAS GERAIS', -46.6, -20.6], ['RIO DE JANEIRO', -43.9, -22.25], ['PARANÁ', -51.0, -24.9], ['MATO GROSSO DO SUL', -52.7, -20.3], ['Oceano Atlântico', -46.3, -24.9]] },
-  vale: { bb: [-46.9, -24.05, -43.9, -21.95], scale: 20, labels: [['MINAS GERAIS', -45.35, -22.15], ['RIO DE JANEIRO', -44.15, -22.95], ['Oceano Atlântico', -46.1, -23.98]] },
+  estado: { bb: [-53.3, -25.5, -43.7, -19.6], scale: 100, labels: [['MG', -46.4, -20.4], ['RJ', -44.0, -22.0], ['PR', -50.8, -24.9], ['MS', -52.6, -20.0], ['Oceano Atlântico', -46.6, -24.9]] },
+  vale: { bb: [-45.8, -23.7, -44.05, -22.3], scale: 20, labels: [['MINAS GERAIS', -45.25, -22.42], ['RIO DE JANEIRO', -44.3, -22.85], ['Oceano Atlântico', -44.95, -23.6]] },
   municipio: { bb: [-44.82, -22.95, -44.36, -22.56], scale: 5, labels: [] }
 };
 const START_BB = [-60, -30, -37, -15];
@@ -292,22 +292,22 @@ function drawMap(ctx, W, H, bb, view, final) {
     const sj = m.n === SJB, vale = VALE.has(m.n) && view !== 'estado', cap = m.n === 'São Paulo';
     ctx.beginPath();
     for (const ring of m.p) ring.forEach(([x, y], i) => { const q = P(x, y); i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]); });
-    ctx.fillStyle = sj ? '#E0A64E' : cap ? '#2F7179' : vale ? '#466A50' : '#2A3A30';
+    ctx.fillStyle = sj ? '#E0A64E' : cap ? '#2F7179' : vale ? '#4C7356' : '#2A3A30';
     ctx.fill(); ctx.lineWidth = lw; ctx.strokeStyle = sj ? '#FFE2B0' : '#56705D'; ctx.stroke();
   }
   // estados vizinhos e oceano
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   for (const [t, lon, lat] of VIEWS[view].labels) {
-    const q = P(lon, lat); ctx.font = 'italic 44px Verdana, sans-serif'; ctx.fillStyle = '#8FA294'; ctx.fillText(t, q[0], q[1]);
+    const q = P(lon, lat); ctx.font = `italic ${t.length <= 2 ? 64 : 44}px Verdana, sans-serif`; ctx.fillStyle = '#8FA294'; ctx.fillText(t, q[0], q[1]);
   }
   // nomes dos municípios
   if (view !== 'estado') {
     for (const m of geo()) {
-      if (view === 'vale' && !VALE.has(m.n) && !['Cunha', 'Cruzeiro', 'Lorena', 'Guaratinguetá', 'São José dos Campos', 'Taubaté'].includes(m.n)) continue;
+      if (view === 'vale' && !VALE.has(m.n) && !['Cunha', 'Cruzeiro', 'Lorena', 'Guaratinguetá', 'Lavrinhas', 'Taubaté', 'Ubatuba', 'Pindamonhangaba'].includes(m.n)) continue;
       const q = P(m.c[0], m.c[1]);
       if (q[0] < 40 || q[0] > W - 40 || q[1] < 40 || q[1] > H - 40) continue;
       if (view === 'municipio' && m.n === SJB) continue;
-      ctx.font = `${VALE.has(m.n) ? 'bold ' : ''}${view === 'municipio' ? 46 : 36}px Verdana, sans-serif`;
+      ctx.font = `${VALE.has(m.n) ? 'bold ' : ''}${view === 'municipio' ? 46 : VALE.has(m.n) ? 44 : 36}px Verdana, sans-serif`;
       ctx.lineWidth = 8; ctx.strokeStyle = 'rgba(14,20,16,0.8)'; ctx.strokeText(m.n, q[0], q[1]);
       ctx.fillStyle = m.n === SJB ? '#1B1206' : '#E4EAE1'; ctx.fillText(m.n, q[0], q[1]);
     }
@@ -317,11 +317,18 @@ function drawMap(ctx, W, H, bb, view, final) {
     ctx.setLineDash([22, 16]); ctx.lineWidth = 6; ctx.strokeStyle = '#F6F7F2';
     ctx.beginPath(); ctx.moveTo(each[0], each[1]); ctx.lineTo(rppn[0], rppn[1]); ctx.stroke(); ctx.setLineDash([]);
     const km = Math.round(haversine(PTS.each, PTS.rppn) / 5) * 5;
-    const mid = [(each[0] + rppn[0]) / 2, (each[1] + rppn[1]) / 2 - 40];
+    let a = each;
+    if (each[0] < 40) { const t = (40 - each[0]) / (rppn[0] - each[0]); a = [40, each[1] + (rppn[1] - each[1]) * t]; }
+    const mid = [(a[0] + rppn[0]) / 2, (a[1] + rppn[1]) / 2 + 60];
     ctx.font = 'bold 50px Verdana, sans-serif'; ctx.textAlign = 'center';
     ctx.lineWidth = 10; ctx.strokeStyle = 'rgba(14,20,16,0.85)'; ctx.strokeText(`≈ ${km} km em linha reta`, mid[0], mid[1]);
     ctx.fillStyle = '#F6F7F2'; ctx.fillText(`≈ ${km} km em linha reta`, mid[0], mid[1]);
-    marker(ctx, each, '#6FC0C8', 'EACH-USP', -1);
+    if (each[0] >= 40) marker(ctx, each, '#6FC0C8', 'EACH-USP', 1);
+    else {
+      ctx.font = 'bold 44px Verdana, sans-serif'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+      ctx.lineWidth = 10; ctx.strokeStyle = 'rgba(14,20,16,0.85)'; ctx.strokeText('← para a EACH-USP', 50, a[1] - 50);
+      ctx.fillStyle = '#6FC0C8'; ctx.fillText('← para a EACH-USP', 50, a[1] - 50);
+    }
     marker(ctx, rppn, '#E0A64E', view === 'estado' ? 'São José do Barreiro' : 'RPPN', view === 'estado' ? -1 : 1, true);
   } else {
     // nome do município e a reserva em escala real (círculo de 38 ha)
@@ -423,9 +430,11 @@ function showSat(s, draw) {
   const finish = () => { if (done) return; done = true; overlay(); flatHots(media, s.hots, (pt) => { const q = px(pt[0], pt[1]); return [q[0] / W, q[1] / H]; }, PW, PH, draw); };
   for (let j = 0; j < ROWS; j++) for (let i = 0; i < COLS; i++) {
     const img = new Image(); img.crossOrigin = 'anonymous';
-    img.onload = () => { ctx.drawImage(img, i * 256, j * 256); refresh(); if (--left === 0) finish(); };
-    img.onerror = () => { if (--left === 0) finish(); };
-    img.src = `https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless_3857/default/g/${Z}/${ty0 + j}/${tx0 + i}.jpg`;
+    let tries = 0;
+    const url = (layer) => `https://tiles.maps.eox.at/wmts/1.0.0/${layer}/default/g/${Z}/${ty0 + j}/${tx0 + i}.jpg`;
+    img.onload = () => { ctx.filter = 'brightness(1.45) contrast(1.1) saturate(1.15)'; ctx.drawImage(img, i * 256, j * 256); ctx.filter = 'none'; refresh(); if (--left === 0) finish(); };
+    img.onerror = () => { if (++tries < 3) { setTimeout(() => { img.src = url('s2cloudless_3857') + '?r=' + tries; }, 400 * tries); } else if (--left === 0) finish(); };
+    img.src = url('s2cloudless_3857');
   }
   setTimeout(finish, 8000);
 }
