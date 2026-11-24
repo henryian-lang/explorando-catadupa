@@ -306,7 +306,7 @@ function drawMap(ctx, W, H, bb, view, final) {
       if (view === 'vale' && !VALE.has(m.n) && !['Cunha', 'Cruzeiro', 'Lorena', 'Guaratinguetá', 'Lavrinhas', 'Taubaté', 'Ubatuba', 'Pindamonhangaba'].includes(m.n)) continue;
       const q = P(m.c[0], m.c[1]);
       if (q[0] < 40 || q[0] > W - 40 || q[1] < 40 || q[1] > H - 40) continue;
-      if (view === 'municipio' && m.n === SJB) continue;
+      if (m.n === SJB) continue;
       ctx.font = `${VALE.has(m.n) ? 'bold ' : ''}${view === 'municipio' ? 46 : VALE.has(m.n) ? 44 : 36}px Verdana, sans-serif`;
       ctx.lineWidth = 8; ctx.strokeStyle = 'rgba(14,20,16,0.8)'; ctx.strokeText(m.n, q[0], q[1]);
       ctx.fillStyle = m.n === SJB ? '#1B1206' : '#E4EAE1'; ctx.fillText(m.n, q[0], q[1]);
@@ -319,11 +319,11 @@ function drawMap(ctx, W, H, bb, view, final) {
     const km = Math.round(haversine(PTS.each, PTS.rppn) / 5) * 5;
     let a = each;
     if (each[0] < 40) { const t = (40 - each[0]) / (rppn[0] - each[0]); a = [40, each[1] + (rppn[1] - each[1]) * t]; }
-    const mid = [(a[0] + rppn[0]) / 2, (a[1] + rppn[1]) / 2 + 60];
+    const mid = view === 'estado' ? [each[0] - 40, each[1] + 80] : [(a[0] + rppn[0]) / 2, (a[1] + rppn[1]) / 2 + 60];
     ctx.font = 'bold 50px Verdana, sans-serif'; ctx.textAlign = 'center';
     ctx.lineWidth = 10; ctx.strokeStyle = 'rgba(14,20,16,0.85)'; ctx.strokeText(`≈ ${km} km em linha reta`, mid[0], mid[1]);
     ctx.fillStyle = '#F6F7F2'; ctx.fillText(`≈ ${km} km em linha reta`, mid[0], mid[1]);
-    if (each[0] >= 40) marker(ctx, each, '#6FC0C8', 'EACH-USP', 1);
+    if (each[0] >= 40) marker(ctx, each, '#6FC0C8', 'EACH-USP', -1);
     else {
       ctx.font = 'bold 44px Verdana, sans-serif'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
       ctx.lineWidth = 10; ctx.strokeStyle = 'rgba(14,20,16,0.85)'; ctx.strokeText('← para a EACH-USP', 50, a[1] - 50);
