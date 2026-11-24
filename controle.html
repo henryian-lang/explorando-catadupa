@@ -87,7 +87,7 @@ kbd { font-family: var(--mono); font-size: 13px; border: 1px solid var(--line); 
         <p id="text"></p>
         <p class="rep" id="rep"></p>
         <div id="hotbox" hidden>
-          <span class="label">Pontos da paisagem: mostrar no óculos</span>
+          <span class="label">Pontos de destaque: mostrar no óculos</span>
           <div class="hots" id="hots"></div>
         </div>
         <div class="row" id="vidbox" hidden>
@@ -106,9 +106,21 @@ kbd { font-family: var(--mono); font-size: 13px; border: 1px solid var(--line); 
 
 <script>
 const STOPS = [
+  { short: 'Mapa: estado de SP', kicker: 'Onde fica', title: 'Do estado de São Paulo…', type: 'map',
+    text: 'São Paulo tem 645 municípios. Saímos da EACH, na zona leste da capital, até o extremo leste do estado, quase na divisa com o Rio de Janeiro.',
+    repare: 'Ache o ponto laranja: é lá que fica a reserva.', hots: ['EACH-USP', 'RPPN'] },
+  { short: 'Mapa: Vale Histórico', kicker: 'Onde fica', title: '…ao Vale Histórico…', type: 'map',
+    text: 'O Vale Histórico reúne cidades que enriqueceram com o café no século XIX e encolheram depois que ele foi embora.',
+    repare: 'A linha tracejada é a distância em linha reta. Pela estrada, a viagem é bem mais longa.', hots: ['EACH-USP', 'Destino'] },
+  { short: 'Mapa: São José do Barreiro', kicker: 'Onde fica', title: '…até São José do Barreiro', type: 'map',
+    text: 'O município tem cerca de 570 km². A RPPN ocupa 38,18 ha: uns 53 campos de futebol.',
+    repare: 'Por que mesmo uma área pequena faz diferença?', hots: ['A cidade', 'RPPN'] },
+  { short: 'Satélite', kicker: 'Vista do alto', title: 'A região vista do satélite', type: 'sat',
+    text: 'Verde escuro é floresta; verde claro e marrom são pastos e áreas abertas. A linha laranja é o limite do município.',
+    repare: 'Onde a mata é contínua e onde ela está em pedaços?', hots: ['RPPN', 'A cidade'] },
   { short: 'Estrada', kicker: 'Antes de chegar', title: 'Os morros contam a história', type: 'pano',
     text: 'A Mata Atlântica do Vale do Paraíba foi derrubada no século XIX para plantar café. Quando o café foi embora, ficou o pasto.',
-    repare: 'Onde a mata sobreviveu? Quase sempre nos topos e nas encostas mais íngremes.' },
+    repare: 'Onde a mata sobreviveu? Quase sempre nos topos e nas encostas mais íngremes.', hots: ['Pasto', 'Mata no topo', 'Capoeira', 'Árvores de borda', 'Encosta com mata'] },
   { short: 'Chegada', kicker: 'Casarão de 1831', title: 'Chegada ao casarão', type: 'video',
     text: 'A sede foi erguida em 1831, quando o Vale do Paraíba começava a ser a maior região produtora de café do país.',
     repare: 'Compare o casarão com os morros de pasto da estrada: a mesma terra, dois destinos.' },
@@ -131,7 +143,6 @@ const STOPS = [
     text: '“Catadupa” quer dizer queda d’água: o rio forma uma cachoeira dupla na fazenda. Vídeo com som.',
     repare: 'O que aconteceria com o rio se as margens virassem pasto?' }
 ];
-const HOTS = ['Pasto', 'Mata no topo', 'Capoeira', 'Árvores de borda', 'Encosta com mata'];
 
 const $ = (id) => document.getElementById(id);
 let current = 0, client = null, topic = null, lastSeen = 0, playing = null;
@@ -143,12 +154,6 @@ STOPS.forEach((s, i) => {
   b.addEventListener('click', () => send({ a: 'goto', i }, i));
   $('stops').appendChild(b);
 });
-HOTS.forEach((h, k) => {
-  const b = document.createElement('button');
-  b.type = 'button'; b.textContent = `${k + 1} · ${h}`; b.setAttribute('aria-pressed', 'false');
-  b.addEventListener('click', () => send({ a: 'hot', k }));
-  $('hots').appendChild(b);
-});
 
 function show(i, hot) {
   current = (i + STOPS.length) % STOPS.length;
@@ -157,7 +162,16 @@ function show(i, hot) {
   $('title').textContent = s.title;
   $('text').textContent = s.text;
   $('rep').textContent = 'Repare: ' + s.repare;
-  $('hotbox').hidden = s.type !== 'pano';
+  $('hotbox').hidden = !s.hots;
+  if (s.hots && $('hots').dataset.stop !== String(current)) {
+    $('hots').dataset.stop = String(current); $('hots').innerHTML = '';
+    s.hots.forEach((h, k) => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.textContent = `${k + 1} · ${h}`; b.setAttribute('aria-pressed', 'false');
+      b.addEventListener('click', () => send({ a: 'hot', k }));
+      $('hots').appendChild(b);
+    });
+  }
   $('vidbox').hidden = s.type !== 'video';
   [...$('stops').children].forEach((b, k) => b.setAttribute('aria-current', k === current ? 'true' : 'false'));
   [...$('hots').children].forEach((b, k) => b.setAttribute('aria-pressed', k === hot ? 'true' : 'false'));
