@@ -189,7 +189,7 @@ function textCanvas(body, repare, heading, wM = 2.6, hM = 2.2) {
       }
       return y + pad;
     };
-    let k = 1;
+    let k = 1.3;
     while (layout(k, false) > h && k > 0.6) k -= 0.05;
     ctx.fillStyle = 'rgba(26,36,30,0.96)'; roundRect(ctx, 0, 0, w, h, 36); ctx.fill();
     layout(k, true);
@@ -228,11 +228,11 @@ function render(i) {
   // Layout em "slide": mídia à esquerda e texto grande à direita, perto do centro da visão
   // (no VR Box as bordas da lente ficam desfocadas, então nada importante vai para as pontas)
   const isPano = s.type === 'pano';
-  const t = plane(4.6, 0.69, isPano ? '0 2.4 -4' : '0 1.45 -3.4');
+  const t = plane(4.6, 0.69, isPano ? '0 2.4 -4' : '0 1.55 -3.6');
   panel(t, titleCanvas(s, current));
 
-  const info = isPano ? plane(2.6, 1.5, '0 -1.0 -2.5', '-20 0 0') : plane(2.6, 2.2, '1.5 0.05 -3.0', '0 -22 0');
-  const tw = 2.6, th = isPano ? 1.5 : 2.2;
+  const info = isPano ? plane(2.6, 1.5, '0 -1.0 -2.5', '-20 0 0') : plane(2.6, 1.7, '1.5 0.1 -3.0', '0 -22 0');
+  const tw = 2.6, th = isPano ? 1.5 : 1.7;
   const draw = (h) => panel(info, h ? textCanvas(h.d, null, h.t, tw, th) : textCanvas(s.text, s.repare, null, tw, th));
   draw();
   showHot = s.type === 'pano' ? (k) => draw(HOTS[k]) : null;
@@ -260,8 +260,8 @@ function render(i) {
   } else if (s.type === 'video') {
     const v = document.getElementById(s.id);
     const scr = document.createElement('a-video');
-    scr.setAttribute('src', '#' + s.id); scr.setAttribute('width', 3.0); scr.setAttribute('height', 1.69);
-    scr.setAttribute('position', '-1.5 0.15 -3.1'); scr.setAttribute('rotation', '0 20 0');
+    scr.setAttribute('src', '#' + s.id); scr.setAttribute('width', 3.1); scr.setAttribute('height', 1.74);
+    scr.setAttribute('position', '-1.55 0.1 -3.0'); scr.setAttribute('rotation', '0 20 0');
     world.appendChild(scr);
     v.currentTime = 0; v.play().catch(() => {});
     if (s.extra) {
