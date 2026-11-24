@@ -337,10 +337,10 @@ function render(i) {
   const immersive = !(s.type === 'slide' || s.layout === 'slide');
   const isPano = s.type === 'pano';
 
-  const title = plane(5.4, 0.76, isPano ? '0 2.55 -4' : '0 2.15 -3.8');
+  const title = plane(5.4, 0.76, isPano ? '0 2.55 -4' : immersive ? '0 2.5 -3.8' : '0 2.15 -3.8');
   panel(title, titleCanvas(s, current));
 
-  let mediaPos = '0 0.3 -3.1', mediaRot = '0 0 0', MW = 4.6;
+  let mediaPos = '0 0.15 -3.1', mediaRot = '0 0 0', MW = 4.6;
   if (!immersive) { mediaPos = '-1.75 0.05 -2.9'; mediaRot = '0 24 0'; MW = 3.3; }
 
   // texto: painel lateral (slides) ou legenda curta embaixo (imersão)
@@ -358,7 +358,7 @@ function render(i) {
     im.setAttribute('width', w); im.setAttribute('height', h); im.setAttribute('position', mediaPos); im.setAttribute('rotation', mediaRot);
     world.appendChild(im);
   } else if (s.type === 'journey') {
-    const media = plane(4.8, 2.7, '0 0.3 -3.1');
+    const media = plane(4.8, 2.7, '0 0.15 -3.1');
     showJourney(media, 1920, 1080);
   } else if (s.type === 'video') {
     const v = document.getElementById(s.id);
@@ -383,9 +383,9 @@ function render(i) {
   }
 
   // navegação pelo olhar (o controle do notebook faz o mesmo)
-  const by = -1.95, bz = -2.5, bx = 1.25;
-  button('‹ Anterior', `${-bx} ${by} ${bz}`, '-35 10 0', () => render(current - 1), current > 0);
-  button(current === STOPS.length - 1 ? 'Recomeçar' : 'Próxima ›', `${bx} ${by} ${bz}`, '-35 -10 0',
+  const by = -1.75, bz = -2.5, bx = 2.6;
+  button('‹ Anterior', `${-bx} ${by} ${bz}`, '-30 30 0', () => render(current - 1), current > 0);
+  button(current === STOPS.length - 1 ? 'Recomeçar' : 'Próxima ›', `${bx} ${by} ${bz}`, '-30 -30 0',
     () => render(current === STOPS.length - 1 ? 0 : current + 1));
   sendStatus();
   scheduleAuto();
