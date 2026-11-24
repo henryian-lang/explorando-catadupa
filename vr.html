@@ -66,6 +66,8 @@
     <img id="i-pano" src="media/panorama.jpg">
     <img id="i-acervo" src="media/acervo.jpg">
     <img id="i-portao" src="media/portao.jpg">
+    <img id="i-rio" src="media/rio.jpg">
+    <img id="i-mata" src="media/morros.jpg">
   </a-assets>
 
   <a-sky color="#15211A"></a-sky>
@@ -86,145 +88,80 @@
 </a-scene>
 
 <script src="geo-sp.js"></script>
+<script src="stops.js"></script>
 <script>
-const PTS = {
-  each: [-46.5003, -23.4823], rppn: [-44.5273, -22.6654], sede: [-44.5772, -22.6414], capital: [-46.6333, -23.5505]
-};
-const STOPS = [
-  { kicker: 'Onde fica', title: 'Do estado de São Paulo…', type: 'map', view: 'estado',
-    text: 'São Paulo tem 645 municípios. Saímos da EACH, na zona leste da capital, e viajamos até o extremo leste do estado, quase na divisa com o Rio de Janeiro.',
-    repare: 'Ache o ponto laranja: é lá que fica a reserva.',
-    hots: [
-      { at: 'each', t: 'EACH-USP', d: 'Nosso ponto de partida, na zona leste de São Paulo.' },
-      { at: 'rppn', t: 'RPPN Fazenda Catadupa', d: 'Em São José do Barreiro, no Vale Histórico.' }
-    ] },
-  { kicker: 'Onde fica', title: '…ao Vale Histórico…', type: 'map', view: 'vale',
-    text: 'No caminho, o Vale do Paraíba. O Vale Histórico reúne cidades que enriqueceram com o café no século XIX e encolheram depois que ele foi embora.',
-    repare: 'A linha tracejada é a distância em linha reta. Pela estrada, a viagem é bem mais longa.',
-    hots: [
-      { at: 'each', t: 'EACH-USP', d: 'De onde o grupo saiu.' },
-      { at: 'rppn', t: 'Destino', d: 'A reserva, perto da Serra da Bocaina.' }
-    ] },
-  { kicker: 'Onde fica', title: '…até São José do Barreiro', type: 'map', view: 'municipio',
-    text: 'São José do Barreiro tem cerca de 570 km². A RPPN ocupa 38,18 ha: o tamanho de uns 53 campos de futebol.',
-    repare: 'A reserva é pequena perto do município. Por que mesmo uma área pequena faz diferença?',
-    hots: [
-      { at: 'sede', t: 'A cidade', d: 'Centro urbano de São José do Barreiro.' },
-      { at: 'rppn', t: 'RPPN Fazenda Catadupa', d: '38,18 ha protegidos para sempre desde 2015.' }
-    ] },
-  { kicker: 'Vista do alto', title: 'A região vista do satélite', type: 'sat',
-    text: 'Verde escuro é floresta; verde claro e marrom são pastos e áreas abertas. A linha laranja é o limite do município.',
-    repare: 'Onde a mata é contínua e onde ela está em pedaços?',
-    hots: [
-      { at: 'rppn', t: 'RPPN', d: 'O círculo tem o mesmo tamanho da reserva (38 ha).' },
-      { at: 'sede', t: 'A cidade', d: 'Repare como a área urbana é pequena perto da zona rural.' }
-    ] },
-  { kicker: 'Antes de chegar', title: 'Os morros contam a história', type: 'pano',
-    text: 'A Mata Atlântica do Vale do Paraíba foi derrubada no século XIX para plantar café. Quando o café foi embora, ficou o pasto. Olhe em volta e mire nos pontos laranja.',
-    repare: 'Onde a mata sobreviveu? Quase sempre nos topos e nas encostas mais íngremes.', hotsFrom: 'HOTS' },
-  { kicker: 'Casarão de 1831', title: 'Chegada ao casarão', type: 'video', id: 'v-chegada',
-    text: 'A sede foi erguida em 1831, quando o Vale do Paraíba começava a ser a maior região produtora de café do país.',
-    repare: 'Compare o casarão com os morros de pasto da estrada: a mesma terra, dois destinos.' },
-  { kicker: 'Na porta do casarão', title: 'Quem cuida da reserva', type: 'video', id: 'v-recepcao',
-    text: 'A RPPN existe por decisão dos próprios donos, que moram no casarão e tocam a restauração. Este vídeo tem som.',
-    repare: 'O que leva alguém a transformar parte da própria terra em reserva para sempre?' },
-  { kicker: 'Dentro do casarão', title: 'Uma casa feita de mata', type: 'video', id: 'v-interior',
-    text: 'Pé-direito alto, forro de tábuas, escada e corrimão de madeira.',
-    repare: 'Quanta madeira você vê aqui? O que havia no lugar de onde ela veio?' },
-  { kicker: 'Acervo', title: 'Salão de Memórias', type: 'video', id: 'v-salao', extra: 'i-acervo',
-    text: 'Arreios, ferramentas, um moedor e grãos de café. Ao lado, retratos e objetos indígenas.',
-    repare: 'Quem usava essas ferramentas? A história do café passa por indígenas e pessoas escravizadas.' },
-  { kicker: 'Ao redor da casa', title: 'Onde o jardim vira mata', type: 'video', id: 'v-jardim',
-    text: 'Palmeiras, samambaias e plantas de folha larga se misturam com a vegetação mais alta ao fundo.',
-    repare: 'Onde termina o jardim e começa a mata? Essa linha existe?' },
-  { kicker: 'Entrada da reserva', title: 'O portão da RPPN', type: 'image', id: 'i-portao', ratio: 640 / 368,
-    text: 'Aqui começam os 38,18 ha protegidos para sempre. Dentro de uma RPPN só são permitidas pesquisa e visitação educativa, turística ou recreativa.',
-    repare: 'O que muda quando atravessamos este portão?' },
-  { kicker: 'Dentro da reserva', title: 'O Rio Formoso', type: 'video', id: 'v-rio',
-    text: '“Catadupa” quer dizer queda d’água: o rio forma uma cachoeira dupla na fazenda. A mata nas margens protege a água. Este vídeo tem som.',
-    repare: 'O que aconteceria com o rio se as margens virassem pasto?' }
+const STOPS = window.STOPS;
+const IMG_RATIO = { 'i-rio': 16 / 9, 'i-portao': 640 / 368, 'i-mata': 16 / 9, 'i-acervo': 16 / 9 };
+const PTS = { each: [-46.5003, -23.4823], rppn: [-44.5273, -22.6654], sede: [-44.5772, -22.6414] };
+/* Trajeto aproximado: Via Dutra até Cachoeira Paulista e Rodovia dos Tropeiros (SP-068) até São José do Barreiro */
+const ROUTE = [
+  ['EACH-USP', -46.5003, -23.4823], ['', -46.53, -23.46], ['', -46.30, -23.40], ['Jacareí', -45.97, -23.30],
+  ['São José dos Campos', -45.89, -23.19], ['Taubaté', -45.56, -23.03], ['', -45.46, -22.92], ['Aparecida', -45.23, -22.85],
+  ['Guaratinguetá', -45.19, -22.82], ['Lorena', -45.12, -22.73], ['Cachoeira Paulista', -45.01, -22.67],
+  ['Silveiras', -44.85, -22.66], ['Areias', -44.70, -22.58], ['São José do Barreiro', -44.577, -22.641], ['RPPN', -44.5273, -22.6654]
 ];
-
-const HOTS = [
-  { x: 43, y: 40, t: 'Pasto', d: 'Capim onde antes havia mata e, depois, café. O solo pisoteado perde fertilidade e sofre erosão.' },
-  { x: 81, y: 31, t: 'Mata no topo', d: 'Fragmento de floresta que sobrou no alto. Topos de morro são Áreas de Preservação Permanente.' },
-  { x: 53, y: 63, t: 'Capoeira', d: 'Arbustos e árvores jovens no pasto abandonado: a mata voltando sozinha.' },
-  { x: 9, y: 70, t: 'Árvores de borda', d: 'Pioneiras que crescem rápido no sol e preparam o terreno para a mata fechada.' },
-  { x: 15, y: 14, t: 'Encosta com mata', d: 'Na encosta mais íngreme, onde era difícil plantar, a floresta resistiu.' }
-];
-
-const C = { bg: '#1A241E', ink: '#E4EAE1', muted: '#A2AFA5', river: '#6FC0C8', coffee: '#E0A64E' };
+const C = { ink: '#E4EAE1', muted: '#A2AFA5', river: '#6FC0C8', coffee: '#E0A64E' };
 const world = document.getElementById('world');
 const scene = document.getElementById('scene');
-let current = 0;
-let showHot = null;
-let autoTimer = null;
+let current = 0, showHot = null, autoTimer = null, animToken = 0;
 
-/* Painéis de texto desenhados em canvas (mantém acentos do português) */
+/* ---------- utilidades de painel (texto desenhado em canvas: mantém acentos) ---------- */
 function wrap(ctx, text, maxW) {
   const words = text.split(' '); const lines = []; let line = '';
-  for (const w of words) {
-    const t = line ? line + ' ' + w : w;
-    if (ctx.measureText(t).width > maxW && line) { lines.push(line); line = w; } else line = t;
-  }
-  if (line) lines.push(line);
-  return lines;
+  for (const w of words) { const t = line ? line + ' ' + w : w; if (ctx.measureText(t).width > maxW && line) { lines.push(line); line = w; } else line = t; }
+  if (line) lines.push(line); return lines;
 }
-function makeCanvas(w, h, draw) {
-  const c = document.createElement('canvas'); c.width = w; c.height = h;
-  draw(c.getContext('2d'), w, h); return c;
-}
+function makeCanvas(w, h, draw) { const c = document.createElement('canvas'); c.width = w; c.height = h; if (draw) draw(c.getContext('2d'), w, h); return c; }
+function texUpdate(el) { const m = el.getObject3D('mesh'); if (m && m.material.map) m.material.map.needsUpdate = true; }
 function panel(el, canvas) {
   el.setAttribute('material', { shader: 'flat', src: canvas, transparent: true });
   const mesh = el.getObject3D('mesh');
-  if (mesh && mesh.material.map) {
-    mesh.material.map.anisotropy = scene.renderer ? scene.renderer.capabilities.getMaxAnisotropy() : 1;
-    mesh.material.map.needsUpdate = true;
-  }
+  if (mesh && mesh.material.map) { mesh.material.map.anisotropy = scene.renderer ? scene.renderer.capabilities.getMaxAnisotropy() : 1; mesh.material.map.needsUpdate = true; }
 }
 function plane(w, h, pos, rot = '0 0 0') {
-  const e = document.createElement('a-plane');
-  e.setAttribute('width', w); e.setAttribute('height', h);
-  e.setAttribute('position', pos); e.setAttribute('rotation', rot);
-  world.appendChild(e); return e;
+  const e = document.createElement('a-plane'); e.setAttribute('width', w); e.setAttribute('height', h);
+  e.setAttribute('position', pos); e.setAttribute('rotation', rot); world.appendChild(e); return e;
 }
 function roundRect(ctx, x, y, w, h, r) {
   ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
   ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
 }
 function titleCanvas(s, i) {
-  return makeCanvas(2200, 330, (ctx, w, h) => {
+  return makeCanvas(2400, 340, (ctx, w) => {
     ctx.textAlign = 'center';
-    ctx.fillStyle = C.coffee; ctx.font = 'bold 58px Verdana, sans-serif';
-    ctx.fillText(`PARADA ${i + 1} DE ${STOPS.length} · ${s.kicker.toUpperCase()}`, w / 2, 76);
-    ctx.fillStyle = C.ink;
-    let size = 140; ctx.font = `bold ${size}px Verdana, sans-serif`;
+    ctx.fillStyle = C.coffee; ctx.font = 'bold 60px Verdana, sans-serif';
+    ctx.fillText(`${i + 1} / ${STOPS.length} · ${s.kicker.toUpperCase()}`, w / 2, 78);
+    ctx.fillStyle = C.ink; let size = 150; ctx.font = `bold ${size}px Verdana, sans-serif`;
     while (ctx.measureText(s.title).width > w - 40 && size > 84) { size -= 6; ctx.font = `bold ${size}px Verdana, sans-serif`; }
-    ctx.fillText(s.title, w / 2, 255);
+    ctx.fillText(s.title, w / 2, 265);
   });
 }
-/* Texto grande: 500 px por metro; reduz a fonte só se não couber */
-function textCanvas(body, repare, heading, wM = 2.8, hM = 1.9) {
-  const W = Math.round(wM * 500), H = Math.round(hM * 500), pad = 56;
+/* Texto grande: 500 px por metro; a fonte só diminui se não couber */
+function textCanvas(body, wM, hM, heading) {
+  const W = Math.round(wM * 500), H = Math.round(hM * 500), pad = 60;
   return makeCanvas(W, H, (ctx, w, h) => {
     const layout = (k, paint) => {
-      let y = pad + 6;
-      const line = (font, color, txt, lh) => {
-        ctx.font = font;
-        for (const l of wrap(ctx, txt, w - pad * 2)) { y += lh; if (paint) { ctx.fillStyle = color; ctx.fillText(l, pad, y); } }
-      };
-      if (heading) { line(`bold ${Math.round(80 * k)}px Verdana, sans-serif`, C.river, heading, 94 * k); y += 18 * k; }
-      line(`${Math.round(66 * k)}px Verdana, sans-serif`, C.ink, body, 88 * k);
-      if (repare) {
-        y += 34 * k; line(`bold ${Math.round(46 * k)}px Verdana, sans-serif`, C.coffee, 'REPARE', 60 * k);
-        line(`italic ${Math.round(58 * k)}px Verdana, sans-serif`, '#C9D3C6', repare, 78 * k);
-      }
-      return y + pad;
+      let y = pad;
+      const line = (font, color, txt, lh) => { ctx.font = font; for (const l of wrap(ctx, txt, w - pad * 2)) { y += lh; if (paint) { ctx.fillStyle = color; ctx.fillText(l, pad, y); } } };
+      if (heading) { line(`bold ${Math.round(84 * k)}px Verdana, sans-serif`, C.river, heading, 98 * k); y += 16 * k; }
+      line(`${Math.round(72 * k)}px Verdana, sans-serif`, C.ink, body, 96 * k);
+      return y + pad * 0.8;
     };
-    let k = 1.25;
-    while (layout(k, false) > h && k > 0.6) k -= 0.05;
-    ctx.fillStyle = 'rgba(26,36,30,0.96)'; roundRect(ctx, 0, 0, w, h, 36); ctx.fill();
+    let k = 1.3; while (layout(k, false) > h && k > 0.55) k -= 0.05;
+    ctx.fillStyle = 'rgba(26,36,30,0.96)'; roundRect(ctx, 0, 0, w, h, 40); ctx.fill();
     layout(k, true);
+  });
+}
+function captionCanvas(text, wM, hM) {
+  const W = Math.round(wM * 500), H = Math.round(hM * 500);
+  return makeCanvas(W, H, (ctx, w, h) => {
+    ctx.fillStyle = 'rgba(18,26,21,0.92)'; roundRect(ctx, 0, 0, w, h, 40); ctx.fill();
+    let size = 92; ctx.font = `${size}px Verdana, sans-serif`;
+    let lines = wrap(ctx, text, w - 100);
+    while ((lines.length * size * 1.25 > h - 50) && size > 50) { size -= 4; ctx.font = `${size}px Verdana, sans-serif`; lines = wrap(ctx, text, w - 100); }
+    ctx.fillStyle = C.ink; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    const top = h / 2 - (lines.length - 1) * size * 1.25 / 2;
+    lines.forEach((l, i) => ctx.fillText(l, w / 2, top + i * size * 1.25));
   });
 }
 function buttonCanvas(label, active = true) {
@@ -236,333 +173,260 @@ function buttonCanvas(label, active = true) {
 }
 function button(label, pos, rot, onClick, active = true) {
   const b = plane(1.5, 0.58, pos, rot);
-  b.addEventListener('loaded', () => panel(b, buttonCanvas(label, active)));
   panel(b, buttonCanvas(label, active));
+  b.addEventListener('loaded', () => panel(b, buttonCanvas(label, active)));
   if (active) {
     b.classList.add('clickable');
     b.addEventListener('mouseenter', () => b.setAttribute('scale', '1.08 1.08 1'));
     b.addEventListener('mouseleave', () => b.setAttribute('scale', '1 1 1'));
     b.addEventListener('click', onClick);
   }
-  return b;
 }
+function stopVideos() { document.querySelectorAll('#vids video').forEach(v => v.pause()); }
 
-function stopVideos() {
-  document.querySelectorAll('#vids video').forEach(v => { v.pause(); });
-}
-
-/* ---------- Mapa de São Paulo (limites municipais do IBGE) ---------- */
-const VALE = new Set(['Areias', 'Arapeí', 'Bananal', 'Queluz', 'São José do Barreiro', 'Silveiras']);
-const SJB = 'São José do Barreiro';
-const VIEWS = {
-  estado: { bb: [-53.3, -25.5, -43.7, -19.6], scale: 100, labels: [['MG', -46.4, -20.4], ['RJ', -44.0, -22.0], ['PR', -50.8, -24.9], ['MS', -52.6, -20.0], ['Oceano Atlântico', -46.6, -24.9]] },
-  vale: { bb: [-45.8, -23.7, -44.05, -22.3], scale: 20, labels: [['MINAS GERAIS', -45.25, -22.42], ['RIO DE JANEIRO', -44.3, -22.85], ['Oceano Atlântico', -44.95, -23.6]] },
-  municipio: { bb: [-44.82, -22.95, -44.36, -22.56], scale: 5, labels: [] }
-};
-const START_BB = [-60, -30, -37, -15];
-let lastBB = START_BB.slice();
-let animToken = 0;
+/* ---------- Mapa e satélite para a viagem ---------- */
 const geo = () => (window.GEO_SP || []);
-
-function fitter(bb, W, H) {
-  const lonC = (bb[0] + bb[2]) / 2, latC = (bb[1] + bb[3]) / 2, k = Math.cos(latC * Math.PI / 180);
-  const sc = Math.min(W / ((bb[2] - bb[0]) * k), H / (bb[3] - bb[1])) * 0.96;
-  return { sc, k, p: (lon, lat) => [W / 2 + (lon - lonC) * k * sc, H / 2 - (lat - latC) * sc] };
+const SJB = 'São José do Barreiro';
+const MBOX = new Map();
+function munBox(m) {
+  if (!MBOX.has(m.n)) { let a = [180, 90, -180, -90]; for (const r of m.p) for (const [x, y] of r) { a = [Math.min(a[0], x), Math.min(a[1], y), Math.max(a[2], x), Math.max(a[3], y)]; } MBOX.set(m.n, a); }
+  return MBOX.get(m.n);
 }
-function haversine(a, b) {
-  const R = 6371, r = Math.PI / 180, dLat = (b[1] - a[1]) * r, dLon = (b[0] - a[0]) * r;
-  const x = Math.sin(dLat / 2) ** 2 + Math.cos(a[1] * r) * Math.cos(b[1] * r) * Math.sin(dLon / 2) ** 2;
-  return 2 * R * Math.asin(Math.sqrt(x));
+function viewer(cx, cy, spanLon, W, H) {
+  const k = Math.cos(cy * Math.PI / 180), sc = W / (spanLon * k);
+  return { k, sc, p: (lon, lat) => [W / 2 + (lon - cx) * k * sc, H / 2 - (lat - cy) * sc],
+    bb: [cx - spanLon / 2, cy - (H / sc) / 2, cx + spanLon / 2, cy + (H / sc) / 2] };
 }
-function marker(ctx, xy, color, label, side = 1, big = false) {
-  const r = big ? 22 : 16;
-  ctx.beginPath(); ctx.arc(xy[0], xy[1], r, 0, Math.PI * 2); ctx.fillStyle = color; ctx.fill();
-  ctx.lineWidth = 6; ctx.strokeStyle = '#F6F7F2'; ctx.stroke();
-  if (label) {
-    ctx.font = 'bold 46px Verdana, sans-serif'; ctx.textAlign = side > 0 ? 'left' : 'right'; ctx.textBaseline = 'middle';
-    ctx.lineWidth = 10; ctx.strokeStyle = 'rgba(14,20,16,0.85)'; ctx.strokeText(label, xy[0] + side * (r + 14), xy[1]);
-    ctx.fillStyle = '#F6F7F2'; ctx.fillText(label, xy[0] + side * (r + 14), xy[1]);
-  }
+function label(ctx, txt, x, y, size = 44, color = '#F6F7F2', align = 'left') {
+  ctx.font = `bold ${size}px Verdana, sans-serif`; ctx.textAlign = align; ctx.textBaseline = 'middle';
+  ctx.lineWidth = size * 0.22; ctx.strokeStyle = 'rgba(14,20,16,0.85)'; ctx.strokeText(txt, x, y); ctx.fillStyle = color; ctx.fillText(txt, x, y);
 }
-function drawMap(ctx, W, H, bb, view, final) {
-  const f = fitter(bb, W, H), P = f.p;
+function drawGeo(ctx, W, H, v, routeUpTo, pos) {
   ctx.fillStyle = '#13201A'; ctx.fillRect(0, 0, W, H);
-  const lw = view === 'estado' ? 1.2 : view === 'vale' ? 2 : 3;
+  const P = v.p, bb = v.bb, lw = Math.max(1, Math.min(4, v.sc / 900));
   for (const m of geo()) {
-    const sj = m.n === SJB, vale = VALE.has(m.n) && view !== 'estado', cap = m.n === 'São Paulo';
+    const b = munBox(m); if (b[2] < bb[0] || b[0] > bb[2] || b[3] < bb[1] || b[1] > bb[3]) continue;
     ctx.beginPath();
     for (const ring of m.p) ring.forEach(([x, y], i) => { const q = P(x, y); i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]); });
-    ctx.fillStyle = sj ? '#E0A64E' : cap ? '#2F7179' : vale ? '#4C7356' : '#2A3A30';
-    ctx.fill(); ctx.lineWidth = lw; ctx.strokeStyle = sj ? '#FFE2B0' : '#56705D'; ctx.stroke();
+    ctx.fillStyle = m.n === SJB ? '#E0A64E' : m.n === 'São Paulo' ? '#2F7179' : '#2B3D32'; ctx.fill();
+    ctx.lineWidth = lw; ctx.strokeStyle = m.n === SJB ? '#FFE2B0' : '#56705D'; ctx.stroke();
   }
-  // estados vizinhos e oceano
-  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  for (const [t, lon, lat] of VIEWS[view].labels) {
-    const q = P(lon, lat); ctx.font = `italic ${t.length <= 2 ? 64 : 44}px Verdana, sans-serif`; ctx.fillStyle = '#8FA294'; ctx.fillText(t, q[0], q[1]);
+  // trajeto percorrido
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  ctx.setLineDash([24, 18]); ctx.lineWidth = 6; ctx.strokeStyle = 'rgba(246,247,242,0.35)';
+  ctx.beginPath(); ROUTE.forEach(([, x, y], i) => { const q = P(x, y); i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]); }); ctx.stroke(); ctx.setLineDash([]);
+  ctx.lineWidth = 12; ctx.strokeStyle = '#6FC0C8'; ctx.beginPath();
+  routeUpTo.forEach(([x, y], i) => { const q = P(x, y); i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]); }); ctx.stroke();
+  // cidades do caminho
+  for (const [n, x, y] of ROUTE) {
+    if (!n || n === 'RPPN') continue; const q = P(x, y);
+    if (q[0] < 0 || q[0] > W || q[1] < 0 || q[1] > H) continue;
+    ctx.beginPath(); ctx.arc(q[0], q[1], 9, 0, Math.PI * 2); ctx.fillStyle = '#F6F7F2'; ctx.fill();
+    label(ctx, n, q[0] + 18, q[1] - 26, n === SJB || n === 'EACH-USP' ? 52 : 40);
   }
-  // nomes dos municípios
-  if (view !== 'estado') {
-    for (const m of geo()) {
-      if (view === 'vale' && !VALE.has(m.n) && !['Cunha', 'Cruzeiro', 'Lorena', 'Guaratinguetá', 'Lavrinhas', 'Taubaté', 'Ubatuba', 'Pindamonhangaba'].includes(m.n)) continue;
-      const q = P(m.c[0], m.c[1]);
-      if (q[0] < 40 || q[0] > W - 40 || q[1] < 40 || q[1] > H - 40) continue;
-      if (m.n === SJB) continue;
-      ctx.font = `${VALE.has(m.n) ? 'bold ' : ''}${view === 'municipio' ? 46 : VALE.has(m.n) ? 44 : 36}px Verdana, sans-serif`;
-      ctx.lineWidth = 8; ctx.strokeStyle = 'rgba(14,20,16,0.8)'; ctx.strokeText(m.n, q[0], q[1]);
-      ctx.fillStyle = m.n === SJB ? '#1B1206' : '#E4EAE1'; ctx.fillText(m.n, q[0], q[1]);
-    }
-  }
-  const each = P(...PTS.each), rppn = P(...PTS.rppn), sede = P(...PTS.sede);
-  if (view !== 'municipio') {
-    ctx.setLineDash([22, 16]); ctx.lineWidth = 6; ctx.strokeStyle = '#F6F7F2';
-    ctx.beginPath(); ctx.moveTo(each[0], each[1]); ctx.lineTo(rppn[0], rppn[1]); ctx.stroke(); ctx.setLineDash([]);
-    const km = Math.round(haversine(PTS.each, PTS.rppn) / 5) * 5;
-    let a = each;
-    if (each[0] < 40) { const t = (40 - each[0]) / (rppn[0] - each[0]); a = [40, each[1] + (rppn[1] - each[1]) * t]; }
-    const mid = view === 'estado' ? [each[0] - 40, each[1] + 80] : [(a[0] + rppn[0]) / 2, (a[1] + rppn[1]) / 2 + 60];
-    ctx.font = 'bold 50px Verdana, sans-serif'; ctx.textAlign = 'center';
-    ctx.lineWidth = 10; ctx.strokeStyle = 'rgba(14,20,16,0.85)'; ctx.strokeText(`≈ ${km} km em linha reta`, mid[0], mid[1]);
-    ctx.fillStyle = '#F6F7F2'; ctx.fillText(`≈ ${km} km em linha reta`, mid[0], mid[1]);
-    if (each[0] >= 40) marker(ctx, each, '#6FC0C8', 'EACH-USP', -1);
-    else {
-      ctx.font = 'bold 44px Verdana, sans-serif'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
-      ctx.lineWidth = 10; ctx.strokeStyle = 'rgba(14,20,16,0.85)'; ctx.strokeText('← para a EACH-USP', 50, a[1] - 50);
-      ctx.fillStyle = '#6FC0C8'; ctx.fillText('← para a EACH-USP', 50, a[1] - 50);
-    }
-    marker(ctx, rppn, '#E0A64E', view === 'estado' ? 'São José do Barreiro' : 'RPPN', view === 'estado' ? -1 : 1, true);
-  } else {
-    // nome do município e a reserva em escala real (círculo de 38 ha)
-    const sj = geo().find(m => m.n === SJB);
-    if (sj) {
-      const q = P(sj.c[0], sj.c[1]);
-      ctx.font = 'bold 60px Verdana, sans-serif'; ctx.fillStyle = '#1B1206'; ctx.textAlign = 'center'; ctx.fillText('São José do Barreiro', q[0], q[1] + 140);
-      ctx.font = 'bold 44px Verdana, sans-serif'; ctx.fillText(`≈ ${Math.round(sj.km2)} km²`, q[0], q[1] + 205);
-    }
-    const rpx = Math.max(10, 348 / 111320 * f.sc);
-    ctx.beginPath(); ctx.arc(rppn[0], rppn[1], rpx, 0, Math.PI * 2); ctx.fillStyle = '#1F6E3A'; ctx.fill(); ctx.lineWidth = 5; ctx.strokeStyle = '#F6F7F2'; ctx.stroke();
-    marker(ctx, sede, '#6FC0C8', 'Cidade', -1);
-    ctx.font = 'bold 46px Verdana, sans-serif'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
-    ctx.lineWidth = 10; ctx.strokeStyle = 'rgba(14,20,16,0.85)'; ctx.strokeText('RPPN · 38 ha', rppn[0] + rpx + 16, rppn[1]);
-    ctx.fillStyle = '#F6F7F2'; ctx.fillText('RPPN · 38 ha', rppn[0] + rpx + 16, rppn[1]);
-  }
+  // destino
+  const r = P(...PTS.rppn); ctx.beginPath(); ctx.arc(r[0], r[1], 18, 0, Math.PI * 2); ctx.fillStyle = '#E0A64E'; ctx.fill(); ctx.lineWidth = 6; ctx.strokeStyle = '#F6F7F2'; ctx.stroke();
+  // você está aqui
+  if (pos) { const q = P(pos[0], pos[1]); ctx.beginPath(); ctx.arc(q[0], q[1], 26, 0, Math.PI * 2); ctx.fillStyle = '#6FC0C8'; ctx.fill(); ctx.lineWidth = 8; ctx.strokeStyle = '#F6F7F2'; ctx.stroke(); }
   // escala
-  const km = VIEWS[view].scale, len = km / 111.32 * f.k * f.sc;
-  ctx.fillStyle = '#F6F7F2'; ctx.fillRect(50, H - 70, len, 12);
-  ctx.font = 'bold 40px Verdana, sans-serif'; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic'; ctx.fillText(`${km} km`, 50, H - 90);
-  ctx.font = '26px Verdana, sans-serif'; ctx.fillStyle = '#8FA294'; ctx.textAlign = 'right'; ctx.fillText('Limites municipais: IBGE', W - 30, H - 30);
-  return f;
+  const kms = [500, 200, 100, 50, 20, 10, 5, 2, 1]; const pxkm = v.sc * v.k / 111.32; const km = kms.find(k => k * pxkm < 360) || 1;
+  ctx.fillStyle = '#F6F7F2'; ctx.fillRect(50, H - 64, km * pxkm, 12); label(ctx, `${km} km`, 50, H - 96, 40);
+  ctx.font = '26px Verdana, sans-serif'; ctx.fillStyle = '#8FA294'; ctx.textAlign = 'right'; ctx.fillText('Limites municipais: IBGE · trajeto aproximado', W - 30, H - 30);
 }
 
-/* Pontos clicáveis sobre um painel plano (mapa ou satélite) */
-function flatHots(media, list, toUV, PW, PH, draw) {
-  list.forEach((h, k) => {
-    const [u, v] = toUV(PTS[h.at]);
-    const dot = document.createElement('a-circle');
-    dot.setAttribute('radius', 0.13); dot.setAttribute('color', '#E0A64E'); dot.setAttribute('opacity', 0.001);
-    dot.setAttribute('position', `${((u - 0.5) * PW).toFixed(3)} ${((0.5 - v) * PH).toFixed(3)} 0.03`);
-    dot.classList.add('clickable');
-    dot.addEventListener('mouseenter', () => dot.setAttribute('opacity', 0.55));
-    dot.addEventListener('mouseleave', () => dot.setAttribute('opacity', 0.001));
-    dot.addEventListener('click', () => { draw(h); sendStatus({ hot: k }); });
-    media.appendChild(dot);
-  });
-}
-
-function showMap(s, draw) {
-  const W = 1600, H = 1200, PW = 3.4, PH = 2.55;
-  const canvas = document.createElement('canvas'); canvas.width = W; canvas.height = H;
-  const ctx = canvas.getContext('2d');
-  const media = plane(PW, PH, '-1.75 0 -2.9', '0 24 0');
-  const target = VIEWS[s.view].bb, from = lastBB.slice(), token = ++animToken, t0 = performance.now(), dur = 1600;
-  drawMap(ctx, W, H, from, s.view, false); panel(media, canvas);
-  const ease = (t) => t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
-  const step = (now) => {
-    if (token !== animToken) return;
-    const t = Math.min(1, (now - t0) / dur), e = ease(t);
-    const bb = from.map((v, i) => v + (target[i] - v) * e);
-    const f = drawMap(ctx, W, H, bb, s.view, t === 1);
-    const mesh = media.getObject3D('mesh'); if (mesh && mesh.material.map) mesh.material.map.needsUpdate = true;
-    if (t < 1) requestAnimationFrame(step);
-    else { lastBB = target.slice(); flatHots(media, s.hots, (pt) => { const q = f.p(pt[0], pt[1]); return [q[0] / W, q[1] / H]; }, PW, PH, draw); }
-  };
-  requestAnimationFrame(step);
-}
-
-/* ---------- Satélite: Sentinel-2 cloudless 2016 (EOX, CC BY 4.0) ---------- */
-function showSat(s, draw) {
-  const Z = 12, COLS = 6, ROWS = 4, W = COLS * 256, H = ROWS * 256, PW = 3.4, PH = 3.4 * H / W;
-  const center = [-44.587, -22.755];
-  const tileXY = (lon, lat) => {
-    const n = 2 ** Z, r = lat * Math.PI / 180;
-    return [(lon + 180) / 360 * n, (1 - Math.log(Math.tan(r) + 1 / Math.cos(r)) / Math.PI) / 2 * n];
-  };
-  const c = tileXY(...center), tx0 = Math.round(c[0] - COLS / 2), ty0 = Math.round(c[1] - ROWS / 2);
-  const px = (lon, lat) => { const t = tileXY(lon, lat); return [(t[0] - tx0) * 256, (t[1] - ty0) * 256]; };
-  const canvas = document.createElement('canvas'); canvas.width = W; canvas.height = H;
-  const ctx = canvas.getContext('2d');
-  ctx.fillStyle = '#13201A'; ctx.fillRect(0, 0, W, H);
-  ctx.fillStyle = '#E4EAE1'; ctx.font = 'bold 54px Verdana, sans-serif'; ctx.textAlign = 'center'; ctx.fillText('Carregando imagem de satélite…', W / 2, H / 2);
-  const media = plane(PW, PH, '-1.75 0 -2.9', '0 24 0');
-  panel(media, canvas);
-  const refresh = () => { const mesh = media.getObject3D('mesh'); if (mesh && mesh.material.map) mesh.material.map.needsUpdate = true; };
-  const overlay = () => {
-    const sj = geo().find(m => m.n === SJB);
-    if (sj) {
-      ctx.beginPath();
-      for (const ring of sj.p) ring.forEach(([x, y], i) => { const q = px(x, y); i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]); });
-      ctx.lineWidth = 6; ctx.strokeStyle = '#E0A64E'; ctx.stroke();
-    }
-    const mpp = 156543.03392 * Math.cos(PTS.rppn[1] * Math.PI / 180) / 2 ** Z;
-    const r = px(...PTS.rppn), rr = Math.max(8, 348 / mpp);
-    ctx.beginPath(); ctx.arc(r[0], r[1], rr, 0, Math.PI * 2); ctx.lineWidth = 5; ctx.strokeStyle = '#F6F7F2'; ctx.stroke();
-    const lbl = (txt, x, y, al = 'left') => { ctx.font = 'bold 40px Verdana, sans-serif'; ctx.textAlign = al; ctx.textBaseline = 'middle'; ctx.lineWidth = 9; ctx.strokeStyle = 'rgba(14,20,16,0.85)'; ctx.strokeText(txt, x, y); ctx.fillStyle = '#F6F7F2'; ctx.fillText(txt, x, y); };
-    lbl('RPPN', r[0] + rr + 12, r[1]);
-    const sd = px(...PTS.sede); ctx.beginPath(); ctx.arc(sd[0], sd[1], 10, 0, Math.PI * 2); ctx.fillStyle = '#6FC0C8'; ctx.fill();
-    lbl('Cidade', sd[0] - 18, sd[1], 'right');
-    const km5 = 5000 / mpp;
-    ctx.fillStyle = '#F6F7F2'; ctx.fillRect(40, H - 60, km5, 10); lbl('5 km', 40, H - 90);
-    lbl('N ↑', W - 40, 50, 'right');
-    ctx.font = '22px Verdana, sans-serif'; ctx.textAlign = 'right'; ctx.fillStyle = '#F6F7F2';
-    ctx.fillText('Sentinel-2 cloudless 2016 © EOX IT Services (CC BY 4.0) · Copernicus · Limites: IBGE', W - 20, H - 18);
-    refresh();
-  };
-  let left = COLS * ROWS, done = false;
-  const finish = () => { if (done) return; done = true; overlay(); flatHots(media, s.hots, (pt) => { const q = px(pt[0], pt[1]); return [q[0] / W, q[1] / H]; }, PW, PH, draw); };
-  for (let j = 0; j < ROWS; j++) for (let i = 0; i < COLS; i++) {
-    const img = new Image(); img.crossOrigin = 'anonymous';
-    let tries = 0;
-    const url = (layer) => `https://tiles.maps.eox.at/wmts/1.0.0/${layer}/default/g/${Z}/${ty0 + j}/${tx0 + i}.jpg`;
-    img.onload = () => { ctx.filter = 'brightness(1.45) contrast(1.1) saturate(1.15)'; ctx.drawImage(img, i * 256, j * 256); ctx.filter = 'none'; refresh(); if (--left === 0) finish(); };
-    img.onerror = () => { if (++tries < 3) { setTimeout(() => { img.src = url('s2cloudless_3857') + '?r=' + tries; }, 400 * tries); } else if (--left === 0) finish(); };
-    img.src = url('s2cloudless_3857');
+/* Mosaico de satélite (Sentinel-2 cloudless 2016, EOX, CC BY 4.0) em projeção de Mercator */
+const SAT = { Z: 13, cols: 8, rows: 6, canvas: null, ready: false, tx0: 0, ty0: 0 };
+function tileXY(lon, lat, z) { const n = 2 ** z, r = lat * Math.PI / 180; return [(lon + 180) / 360 * n, (1 - Math.log(Math.tan(r) + 1 / Math.cos(r)) / Math.PI) / 2 * n]; }
+function loadSat() {
+  if (SAT.canvas) return;
+  const c = tileXY(-44.56, -22.66, SAT.Z);
+  SAT.tx0 = Math.round(c[0] - SAT.cols / 2); SAT.ty0 = Math.round(c[1] - SAT.rows / 2);
+  SAT.canvas = makeCanvas(SAT.cols * 256, SAT.rows * 256);
+  const ctx = SAT.canvas.getContext('2d'); ctx.fillStyle = '#1C2C22'; ctx.fillRect(0, 0, SAT.canvas.width, SAT.canvas.height);
+  let left = SAT.cols * SAT.rows;
+  for (let j = 0; j < SAT.rows; j++) for (let i = 0; i < SAT.cols; i++) {
+    const img = new Image(); img.crossOrigin = 'anonymous'; let tries = 0;
+    const url = `https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless_3857/default/g/${SAT.Z}/${SAT.ty0 + j}/${SAT.tx0 + i}.jpg`;
+    img.onload = () => { ctx.filter = 'brightness(1.45) contrast(1.1) saturate(1.15)'; ctx.drawImage(img, i * 256, j * 256); ctx.filter = 'none'; if (--left === 0) SAT.ready = true; };
+    img.onerror = () => { if (++tries < 3) setTimeout(() => { img.src = url + '?r=' + tries; }, 500 * tries); else if (--left === 0) SAT.ready = true; };
+    img.src = url;
   }
-  setTimeout(finish, 8000);
+}
+function satPx(lon, lat) { const t = tileXY(lon, lat, SAT.Z); return [(t[0] - SAT.tx0) * 256, (t[1] - SAT.ty0) * 256]; }
+function drawSat(ctx, W, H, zoom, alpha) {
+  // zoom = largura visível em pixels do mosaico; centralizado na RPPN
+  const c = satPx(...PTS.rppn), sw = zoom, sh = zoom * H / W;
+  ctx.save(); ctx.globalAlpha = alpha;
+  ctx.drawImage(SAT.canvas, c[0] - sw / 2, c[1] - sh / 2, sw, sh, 0, 0, W, H);
+  const s = W / sw, P = (lon, lat) => { const q = satPx(lon, lat); return [(q[0] - (c[0] - sw / 2)) * s, (q[1] - (c[1] - sh / 2)) * s]; };
+  const sj = geo().find(m => m.n === SJB);
+  if (sj) { ctx.beginPath(); for (const ring of sj.p) ring.forEach(([x, y], i) => { const q = P(x, y); i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]); }); ctx.lineWidth = 6; ctx.strokeStyle = '#E0A64E'; ctx.stroke(); }
+  const mpp = 156543.03392 * Math.cos(PTS.rppn[1] * Math.PI / 180) / 2 ** SAT.Z / s;
+  const r = P(...PTS.rppn), rr = Math.max(10, 348 / mpp);
+  ctx.beginPath(); ctx.arc(r[0], r[1], rr, 0, Math.PI * 2); ctx.lineWidth = 7; ctx.strokeStyle = '#F6F7F2'; ctx.stroke();
+  label(ctx, 'RPPN Fazenda Catadupa', r[0] + rr + 18, r[1], 54);
+  const sd = P(...PTS.sede); ctx.beginPath(); ctx.arc(sd[0], sd[1], 12, 0, Math.PI * 2); ctx.fillStyle = '#6FC0C8'; ctx.fill();
+  label(ctx, 'São José do Barreiro', sd[0] - 22, sd[1], 44, '#F6F7F2', 'right');
+  const kms = [10, 5, 2, 1, 0.5]; const km = kms.find(k => k * 1000 / mpp < 360) || 0.5;
+  ctx.fillStyle = '#F6F7F2'; ctx.fillRect(50, H - 64, km * 1000 / mpp, 12); label(ctx, km < 1 ? `${km * 1000} m` : `${km} km`, 50, H - 96, 40);
+  ctx.font = '24px Verdana, sans-serif'; ctx.fillStyle = '#F6F7F2'; ctx.textAlign = 'right'; ctx.fillText('Sentinel-2 cloudless 2016 © EOX IT Services (CC BY 4.0) · Copernicus · Limites: IBGE', W - 24, H - 24);
+  ctx.restore();
 }
 
+/* A viagem: uma animação contínua em primeira pessoa, da EACH até a RPPN */
+const JOURNEY_MS = 30000;
+function showJourney(media, W, H) {
+  loadSat();
+  const canvas = makeCanvas(W, H), ctx = canvas.getContext('2d');
+  panel(media, canvas);
+  // distância acumulada ao longo do trajeto
+  const segs = []; let total = 0;
+  for (let i = 1; i < ROUTE.length; i++) { const a = ROUTE[i - 1], b = ROUTE[i]; const d = Math.hypot((b[1] - a[1]) * Math.cos(a[2] * Math.PI / 180), b[2] - a[2]); segs.push(d); total += d; }
+  const at = (f) => {
+    let d = f * total, pts = [[ROUTE[0][1], ROUTE[0][2]]];
+    for (let i = 0; i < segs.length; i++) {
+      const a = ROUTE[i], b = ROUTE[i + 1];
+      if (d <= segs[i]) { const t = segs[i] ? d / segs[i] : 0; const p = [a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t]; pts.push(p); return { p, pts }; }
+      d -= segs[i]; pts.push([b[1], b[2]]);
+    }
+    return { p: [ROUTE.at(-1)[1], ROUTE.at(-1)[2]], pts };
+  };
+  const ease = (t) => t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+  const lerp = (a, b, t) => a + (b - a) * t;
+  const token = ++animToken, t0 = performance.now();
+  const frame = (now) => {
+    if (token !== animToken) return;
+    const t = now - t0;
+    let cx, cy, span, f = 0, satA = 0;
+    if (t < 3000) {                      // 1. partida: perto da EACH
+      cx = PTS.each[0]; cy = PTS.each[1]; span = 0.6;
+    } else if (t < 6500) {               // 2. sobe para ver o caminho todo
+      const e = ease((t - 3000) / 3500); cx = lerp(PTS.each[0], -45.5, e); cy = lerp(PTS.each[1], -23.0, e); span = lerp(0.6, 2.9, e);
+    } else if (t < 20000) {              // 3. segue o trajeto
+      f = ease((t - 6500) / 13500); const { p } = at(f);
+      const e = Math.min(1, (t - 6500) / 2500); cx = lerp(-45.5, p[0], e); cy = lerp(-23.0, p[1], e); span = lerp(2.9, 1.1, e);
+    } else if (t < 24000) {              // 4. aproxima de São José do Barreiro
+      f = 1; const e = ease((t - 20000) / 4000); cx = lerp(PTS.rppn[0], -44.56, e); cy = lerp(PTS.rppn[1], -22.70, e); span = lerp(1.1, 0.42, e);
+    } else {                             // 5. vista do satélite
+      f = 1; cx = -44.56; cy = -22.70; span = 0.42; satA = Math.min(1, (t - 24000) / 1500);
+    }
+    if (t >= 6500 && t < 20000) { /* f já calculado */ } else if (t >= 20000) f = 1;
+    const v = viewer(cx, cy, span, W, H);
+    const { p, pts } = at(f);
+    drawGeo(ctx, W, H, v, t < 6500 ? [] : pts, t < 6500 ? PTS.each : p);
+    if (satA > 0 && SAT.canvas) {
+      const zSat = lerp(SAT.cols * 256 * 0.95, 700, ease(Math.min(1, (t - 24000) / 6000)));
+      drawSat(ctx, W, H, zSat, satA);
+    }
+    if (t < 3000) label(ctx, 'Partida: EACH-USP, zona leste de São Paulo', W / 2, 80, 58, '#F6F7F2', 'center');
+    else if (t > 26500) label(ctx, 'Chegamos: RPPN Fazenda Catadupa', W / 2, 80, 62, '#F6F7F2', 'center');
+    texUpdate(media);
+    if (t < JOURNEY_MS) requestAnimationFrame(frame);
+  };
+  requestAnimationFrame(frame);
+}
+
+/* ---------- montagem de cada parada ---------- */
 function render(i) {
   current = (i + STOPS.length) % STOPS.length;
   const s = STOPS[current];
-  stopVideos();
-  animToken++;
+  stopVideos(); animToken++;
   while (world.firstChild) world.removeChild(world.firstChild);
-  const hots = s.hotsFrom === 'HOTS' ? HOTS : (s.hots || null);
+  showHot = null;
 
-  // Layout em "slide": mídia à esquerda e texto grande à direita, perto do centro da visão
-  // (no VR Box as bordas da lente ficam desfocadas, então nada importante vai para as pontas)
+  const immersive = !(s.type === 'slide' || s.layout === 'slide');
   const isPano = s.type === 'pano';
-  const t = plane(5.0, 0.75, isPano ? '0 2.45 -4' : '0 2.1 -3.8');
-  panel(t, titleCanvas(s, current));
 
-  const tw = isPano ? 3.0 : 2.8, th = isPano ? 1.5 : 1.9;
-  const info = isPano ? plane(tw, th, '0 -1.0 -2.5', '-20 0 0') : plane(tw, th, '1.6 0 -3.0', '0 -24 0');
-  const draw = (h) => panel(info, h ? textCanvas(h.d, null, h.t, tw, th) : textCanvas(s.text, s.repare, null, tw, th));
-  draw();
-  showHot = hots ? (k) => { if (hots[k]) draw(hots[k]); } : null;
+  const title = plane(5.4, 0.76, isPano ? '0 2.55 -4' : '0 2.15 -3.8');
+  panel(title, titleCanvas(s, current));
 
-  if (s.type === 'map') showMap(s, draw);
-  else if (s.type === 'sat') showSat(s, draw);
-  else if (s.type === 'pano') {
-    const R = 5, THETA = 120, H = R * (THETA * Math.PI / 180) / (1240 / 465);
-    const cyl = document.createElement('a-curvedimage');
-    cyl.setAttribute('src', '#i-pano'); cyl.setAttribute('radius', R); cyl.setAttribute('height', H);
-    cyl.setAttribute('theta-length', THETA); cyl.setAttribute('theta-start', 180 - THETA / 2);
-    cyl.setAttribute('scale', '-1 1 1'); cyl.setAttribute('position', '0 0.2 0');
-    world.appendChild(cyl);
-    t.setAttribute('position', `0 ${0.2 + H / 2 + 0.5} -4`);
-    HOTS.forEach((h, k) => {
-      const phi = (-THETA / 2 + (h.x / 100) * THETA) * Math.PI / 180;
-      const r = R * 0.94, y = 0.2 + (0.5 - h.y / 100) * H;
-      const dot = document.createElement('a-circle');
-      dot.setAttribute('radius', 0.22); dot.setAttribute('color', '#E0A64E');
-      dot.setAttribute('position', `${(r * Math.sin(phi)).toFixed(3)} ${y.toFixed(3)} ${(-r * Math.cos(phi)).toFixed(3)}`);
-      dot.setAttribute('rotation', `0 ${(-phi * 180 / Math.PI).toFixed(1)} 0`);
-      dot.setAttribute('animation', 'property: scale; dir: alternate; loop: true; dur: 900; to: 1.25 1.25 1');
-      dot.classList.add('clickable');
-      dot.addEventListener('click', () => { draw(h); sendStatus({ hot: k }); });
-      world.appendChild(dot);
-    });
+  let mediaPos = '0 0.3 -3.1', mediaRot = '0 0 0', MW = 4.6;
+  if (!immersive) { mediaPos = '-1.75 0.05 -2.9'; mediaRot = '0 24 0'; MW = 3.3; }
+
+  // texto: painel lateral (slides) ou legenda curta embaixo (imersão)
+  if (!immersive) {
+    const info = plane(2.9, 2.0, '1.65 0.05 -3.0', '0 -24 0');
+    panel(info, textCanvas(s.text, 2.9, 2.0));
+  } else if (s.caption) {
+    const cap = plane(3.6, 0.62, isPano ? '0 -1.15 -2.6' : '0 -1.25 -2.6', '-22 0 0');
+    panel(cap, captionCanvas(s.caption, 3.6, 0.62));
+  }
+
+  if (s.type === 'slide') {
+    const r = IMG_RATIO[s.img] || 16 / 9, h = Math.min(MW / r, 2.3), w = h * r;
+    const im = document.createElement('a-image'); im.setAttribute('src', '#' + s.img);
+    im.setAttribute('width', w); im.setAttribute('height', h); im.setAttribute('position', mediaPos); im.setAttribute('rotation', mediaRot);
+    world.appendChild(im);
+  } else if (s.type === 'journey') {
+    const media = plane(4.8, 2.7, '0 0.3 -3.1');
+    showJourney(media, 1920, 1080);
   } else if (s.type === 'video') {
     const v = document.getElementById(s.id);
-    const scr = document.createElement('a-video');
-    scr.setAttribute('src', '#' + s.id); scr.setAttribute('width', 3.3); scr.setAttribute('height', 1.86);
-    scr.setAttribute('position', '-1.75 0 -2.9'); scr.setAttribute('rotation', '0 24 0');
+    const scr = document.createElement('a-video'); scr.setAttribute('src', '#' + s.id);
+    scr.setAttribute('width', MW); scr.setAttribute('height', MW * 9 / 16); scr.setAttribute('position', mediaPos); scr.setAttribute('rotation', mediaRot);
     world.appendChild(scr);
     v.currentTime = 0; v.play().catch(() => {});
     if (s.extra) {
-      const im = document.createElement('a-image');
-      im.setAttribute('src', '#' + s.extra); im.setAttribute('width', 2.4); im.setAttribute('height', 1.5);
-      im.setAttribute('position', '-3.6 0 -1.4'); im.setAttribute('rotation', '0 66 0');
+      const im = document.createElement('a-image'); im.setAttribute('src', '#' + s.extra);
+      im.setAttribute('width', 2.6); im.setAttribute('height', 2.6 * 9 / 16);
+      im.setAttribute('position', '3.4 0.3 -1.8'); im.setAttribute('rotation', '0 -58 0');
       world.appendChild(im);
     }
-  } else if (s.type === 'image') {
-    const im = document.createElement('a-image');
-    im.setAttribute('src', '#' + s.id); im.setAttribute('height', 1.86); im.setAttribute('width', 1.86 * s.ratio);
-    im.setAttribute('position', '-1.75 0 -2.9'); im.setAttribute('rotation', '0 24 0');
-    world.appendChild(im);
+  } else if (isPano) {
+    const R = 5, THETA = 140, H = R * (THETA * Math.PI / 180) / (1240 / 465);
+    const cyl = document.createElement('a-curvedimage');
+    cyl.setAttribute('src', '#i-pano'); cyl.setAttribute('radius', R); cyl.setAttribute('height', H);
+    cyl.setAttribute('theta-length', THETA); cyl.setAttribute('theta-start', 180 - THETA / 2);
+    cyl.setAttribute('scale', '-1 1 1'); cyl.setAttribute('position', '0 0.3 0');
+    world.appendChild(cyl);
+    title.setAttribute('position', `0 ${0.3 + H / 2 + 0.55} -4`);
   }
 
-  // Navegação pelo olhar
-  const by = isPano ? -1.6 : -1.5, bz = isPano ? -2.2 : -2.6, bx = isPano ? 2.0 : 1.15;
-  button('‹ Anterior', `${-bx} ${by} ${bz}`, `-25 ${isPano ? 25 : 10} 0`, () => render(current - 1), current > 0);
-  button(current === STOPS.length - 1 ? 'Recomeçar' : 'Próxima ›', `${bx} ${by} ${bz}`, `-25 ${isPano ? -25 : -10} 0`,
+  // navegação pelo olhar (o controle do notebook faz o mesmo)
+  const by = -1.95, bz = -2.5, bx = 1.25;
+  button('‹ Anterior', `${-bx} ${by} ${bz}`, '-35 10 0', () => render(current - 1), current > 0);
+  button(current === STOPS.length - 1 ? 'Recomeçar' : 'Próxima ›', `${bx} ${by} ${bz}`, '-35 -10 0',
     () => render(current === STOPS.length - 1 ? 0 : current + 1));
   sendStatus();
   scheduleAuto();
 }
 
-/* Recentralizar: gira o conteúdo para onde a pessoa está olhando */
 function recenter() {
-  const v = new THREE.Vector3();
-  scene.camera.getWorldDirection(v);
+  const v = new THREE.Vector3(); scene.camera.getWorldDirection(v);
   world.object3D.rotation.y = Math.atan2(-v.x, -v.z);
 }
-
-/* Modo automático */
 function scheduleAuto() {
   clearTimeout(autoTimer);
   if (!document.getElementById('auto').checked) return;
   const s = STOPS[current];
-  let ms = 25000;
-  if (s.type === 'video') {
-    const d = document.getElementById(s.id).duration;
-    if (d && isFinite(d)) ms = Math.max(15000, Math.min(45000, d * 1000 * 2));
-  }
+  let ms = s.type === 'journey' ? JOURNEY_MS + 4000 : 22000;
+  if (s.type === 'video') { const d = document.getElementById(s.id).duration; if (d && isFinite(d)) ms = Math.max(15000, Math.min(45000, d * 1000 * 2)); }
   autoTimer = setTimeout(() => render(current + 1), ms);
 }
 
-/* Controle remoto via MQTT (broker público) */
+/* ---------- controle remoto via MQTT (broker público) ---------- */
 const CODE = String(Math.floor(1000 + Math.random() * 9000));
 const TOPIC = `explorando-catadupa/v1/${CODE}`;
 document.getElementById('code').textContent = CODE;
 let client = null;
 function sendStatus(extra = {}) {
   if (!client || !client.connected) return;
-  const s = STOPS[current];
-  const vid = s.type === 'video' ? document.getElementById(s.id) : null;
+  const s = STOPS[current], vid = s.type === 'video' ? document.getElementById(s.id) : null;
   client.publish(TOPIC + '/status', JSON.stringify({ i: current, title: s.title, playing: vid ? !vid.paused : null, t: Date.now(), ...extra }));
 }
-function badge(msg) {
-  const b = document.getElementById('badge');
-  b.textContent = msg; b.hidden = false;
-  clearTimeout(badge.t); badge.t = setTimeout(() => { b.hidden = true; }, 2500);
-}
+function badge(msg) { const b = document.getElementById('badge'); b.textContent = msg; b.hidden = false; clearTimeout(badge.t); badge.t = setTimeout(() => { b.hidden = true; }, 2500); }
 try {
   client = mqtt.connect('wss://broker.hivemq.com:8884/mqtt', { clientId: 'cat-vr-' + CODE + '-' + Math.random().toString(16).slice(2, 8), reconnectPeriod: 3000, connectTimeout: 8000 });
-  client.on('connect', () => {
-    document.getElementById('rstatus').textContent = 'Pronto para receber o controle';
-    client.subscribe(TOPIC + '/cmd');
-    sendStatus();
-  });
+  client.on('connect', () => { document.getElementById('rstatus').textContent = 'Pronto para receber o controle'; client.subscribe(TOPIC + '/cmd'); sendStatus(); });
   client.on('offline', () => { document.getElementById('rstatus').textContent = 'Sem conexão com o controle (o óculos funciona normalmente)'; });
   client.on('message', (topic, buf) => {
     let m; try { m = JSON.parse(buf.toString()); } catch (e) { return; }
-    const s = STOPS[current];
-    const vid = s.type === 'video' ? document.getElementById(s.id) : null;
+    const s = STOPS[current], vid = s.type === 'video' ? document.getElementById(s.id) : null;
     if (m.a === 'ping') { sendStatus(); return; }
     if (m.a === 'goto') render(m.i);
     else if (m.a === 'next') render(current + 1);
     else if (m.a === 'prev') render(current - 1);
-    else if (m.a === 'hot' && showHot) { showHot(m.k); sendStatus({ hot: m.k }); }
+    else if (m.a === 'replay' && s.type === 'journey') render(current);
     else if (m.a === 'play' && vid) { vid.play().catch(() => {}); sendStatus(); }
     else if (m.a === 'pause' && vid) { vid.pause(); sendStatus(); }
     else if (m.a === 'restart' && vid) { vid.currentTime = 0; vid.play().catch(() => {}); sendStatus(); }
@@ -573,23 +437,18 @@ try {
   document.getElementById('rstatus').textContent = 'Controle indisponível nesta rede (o óculos funciona normalmente)';
 }
 
-/* Entrada: libera giroscópio (iPhone) e vídeos antes do VR */
+/* ---------- entrada: libera giroscópio (iPhone) e vídeos antes do VR ---------- */
 async function unlock() {
-  try {
-    if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-      await DeviceOrientationEvent.requestPermission();
-    }
-  } catch (e) {}
+  try { if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') await DeviceOrientationEvent.requestPermission(); } catch (e) {}
   const vids = [...document.querySelectorAll('#vids video')];
-  const all = Promise.all(vids.map(v => { const m = v.muted; v.muted = true; return v.play().then(() => { v.pause(); v.muted = m; }).catch(() => { v.muted = m; }); }));
-  // não espera mais que 1,5 s: se algum vídeo demorar a carregar, o tour abre mesmo assim
+  const all = Promise.all(vids.map(v => { v.muted = true; return v.play().then(() => v.pause()).catch(() => {}); }));
   await Promise.race([all, new Promise(r => setTimeout(r, 1500))]);
-  vids.forEach(v => { if (v.id !== 'v-recepcao' && v.id !== 'v-rio') v.muted = true; else v.muted = false; });
+  vids.forEach(v => { v.muted = !(v.id === 'v-recepcao' || v.id === 'v-rio'); });
 }
 function start(vr) {
+  loadSat();
   unlock().then(() => {
     world.object3D.rotation.y = 0;
-    lastBB = START_BB.slice();
     document.getElementById('intro').hidden = true;
     render(0);
     if (vr) { try { scene.enterVR(); } catch (e) {} }

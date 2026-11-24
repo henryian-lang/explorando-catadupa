@@ -95,6 +95,7 @@ kbd { font-family: var(--mono); font-size: 13px; border: 1px solid var(--line); 
           <button type="button" class="sec" id="pause">❚❚ Pausar</button>
           <button type="button" class="sec" id="restart">↺ Do início</button>
         </div>
+        <div class="row"><button type="button" class="sec" id="replay" hidden>↺ Repetir a viagem</button></div>
       </div>
       <div class="row">
         <button type="button" class="sec" id="center">◎ Centralizar a visão</button>
@@ -104,45 +105,9 @@ kbd { font-family: var(--mono); font-size: 13px; border: 1px solid var(--line); 
   </div>
 </div>
 
+<script src="stops.js"></script>
 <script>
-const STOPS = [
-  { short: 'Mapa: estado de SP', kicker: 'Onde fica', title: 'Do estado de São Paulo…', type: 'map',
-    text: 'São Paulo tem 645 municípios. Saímos da EACH, na zona leste da capital, até o extremo leste do estado, quase na divisa com o Rio de Janeiro.',
-    repare: 'Ache o ponto laranja: é lá que fica a reserva.', hots: ['EACH-USP', 'RPPN'] },
-  { short: 'Mapa: Vale Histórico', kicker: 'Onde fica', title: '…ao Vale Histórico…', type: 'map',
-    text: 'O Vale Histórico reúne cidades que enriqueceram com o café no século XIX e encolheram depois que ele foi embora.',
-    repare: 'A linha tracejada é a distância em linha reta. Pela estrada, a viagem é bem mais longa.', hots: ['EACH-USP', 'Destino'] },
-  { short: 'Mapa: São José do Barreiro', kicker: 'Onde fica', title: '…até São José do Barreiro', type: 'map',
-    text: 'O município tem cerca de 570 km². A RPPN ocupa 38,18 ha: uns 53 campos de futebol.',
-    repare: 'Por que mesmo uma área pequena faz diferença?', hots: ['A cidade', 'RPPN'] },
-  { short: 'Satélite', kicker: 'Vista do alto', title: 'A região vista do satélite', type: 'sat',
-    text: 'Verde escuro é floresta; verde claro e marrom são pastos e áreas abertas. A linha laranja é o limite do município.',
-    repare: 'Onde a mata é contínua e onde ela está em pedaços?', hots: ['RPPN', 'A cidade'] },
-  { short: 'Estrada', kicker: 'Antes de chegar', title: 'Os morros contam a história', type: 'pano',
-    text: 'A Mata Atlântica do Vale do Paraíba foi derrubada no século XIX para plantar café. Quando o café foi embora, ficou o pasto.',
-    repare: 'Onde a mata sobreviveu? Quase sempre nos topos e nas encostas mais íngremes.', hots: ['Pasto', 'Mata no topo', 'Capoeira', 'Árvores de borda', 'Encosta com mata'] },
-  { short: 'Chegada', kicker: 'Casarão de 1831', title: 'Chegada ao casarão', type: 'video',
-    text: 'A sede foi erguida em 1831, quando o Vale do Paraíba começava a ser a maior região produtora de café do país.',
-    repare: 'Compare o casarão com os morros de pasto da estrada: a mesma terra, dois destinos.' },
-  { short: 'Recepção', kicker: 'Na porta do casarão', title: 'Quem cuida da reserva', type: 'video',
-    text: 'A RPPN existe por decisão dos próprios donos, que moram no casarão e tocam a restauração. Vídeo com som.',
-    repare: 'O que leva alguém a transformar parte da própria terra em reserva para sempre?' },
-  { short: 'Interior', kicker: 'Dentro do casarão', title: 'Uma casa feita de mata', type: 'video',
-    text: 'Pé-direito alto, forro de tábuas, escada e corrimão de madeira.',
-    repare: 'Quanta madeira você vê aqui? O que havia no lugar de onde ela veio?' },
-  { short: 'Salão de Memórias', kicker: 'Acervo', title: 'Salão de Memórias', type: 'video',
-    text: 'Arreios, ferramentas, um moedor e grãos de café. À direita no óculos, retratos e objetos indígenas.',
-    repare: 'Quem usava essas ferramentas? A história do café passa por indígenas e pessoas escravizadas.' },
-  { short: 'Jardim', kicker: 'Ao redor da casa', title: 'Onde o jardim vira mata', type: 'video',
-    text: 'Palmeiras, samambaias e plantas de folha larga se misturam com a vegetação mais alta ao fundo.',
-    repare: 'Onde termina o jardim e começa a mata? Essa linha existe?' },
-  { short: 'Portão da RPPN', kicker: 'Entrada da reserva', title: 'O portão da RPPN', type: 'image',
-    text: 'Aqui começam os 38,18 ha protegidos para sempre. Numa RPPN só são permitidas pesquisa e visitação educativa, turística ou recreativa.',
-    repare: 'O que muda quando atravessamos este portão?' },
-  { short: 'Rio Formoso', kicker: 'Dentro da reserva', title: 'O Rio Formoso', type: 'video',
-    text: '“Catadupa” quer dizer queda d’água: o rio forma uma cachoeira dupla na fazenda. Vídeo com som.',
-    repare: 'O que aconteceria com o rio se as margens virassem pasto?' }
-];
+const STOPS = window.STOPS;
 
 const $ = (id) => document.getElementById(id);
 let current = 0, client = null, topic = null, lastSeen = 0, playing = null;
@@ -161,7 +126,9 @@ function show(i, hot) {
   $('kick').textContent = `Parada ${current + 1} de ${STOPS.length} · ${s.kicker}`;
   $('title').textContent = s.title;
   $('text').textContent = s.text;
-  $('rep').textContent = 'Repare: ' + s.repare;
+  $('rep').textContent = s.repare ? 'Repare: ' + s.repare : '';
+  $('rep').hidden = !s.repare;
+  $('replay').hidden = s.type !== 'journey';
   $('hotbox').hidden = !s.hots;
   if (s.hots && $('hots').dataset.stop !== String(current)) {
     $('hots').dataset.stop = String(current); $('hots').innerHTML = '';
@@ -220,6 +187,7 @@ $('play').addEventListener('click', () => send({ a: 'play' }));
 $('pause').addEventListener('click', () => send({ a: 'pause' }));
 $('restart').addEventListener('click', () => send({ a: 'restart' }));
 $('center').addEventListener('click', () => send({ a: 'center' }));
+$('replay').addEventListener('click', () => send({ a: 'replay' }));
 document.addEventListener('keydown', (e) => {
   if (e.target.tagName === 'INPUT') return;
   if (e.key === 'ArrowRight') { send({ a: 'next' }, current + 1); e.preventDefault(); }
