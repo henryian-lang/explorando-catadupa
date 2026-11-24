@@ -145,7 +145,10 @@ function makeCanvas(w, h, draw) {
 function panel(el, canvas) {
   el.setAttribute('material', { shader: 'flat', src: canvas, transparent: true });
   const mesh = el.getObject3D('mesh');
-  if (mesh && mesh.material.map) mesh.material.map.needsUpdate = true;
+  if (mesh && mesh.material.map) {
+    mesh.material.map.anisotropy = scene.renderer ? scene.renderer.capabilities.getMaxAnisotropy() : 1;
+    mesh.material.map.needsUpdate = true;
+  }
 }
 function plane(w, h, pos, rot = '0 0 0') {
   const e = document.createElement('a-plane');
@@ -158,31 +161,44 @@ function roundRect(ctx, x, y, w, h, r) {
   ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
 }
 function titleCanvas(s, i) {
-  return makeCanvas(1400, 220, (ctx, w, h) => {
-    ctx.fillStyle = C.coffee; ctx.font = 'bold 34px Verdana, sans-serif';
-    ctx.fillText(`PARADA ${i + 1} DE ${STOPS.length} · ${s.kicker.toUpperCase()}`, 10, 60);
-    ctx.fillStyle = C.ink; ctx.font = 'bold 86px Verdana, sans-serif';
-    ctx.fillText(s.title, 10, 170);
+  return makeCanvas(2000, 300, (ctx, w, h) => {
+    ctx.textAlign = 'center';
+    ctx.fillStyle = C.coffee; ctx.font = 'bold 52px Verdana, sans-serif';
+    ctx.fillText(`PARADA ${i + 1} DE ${STOPS.length} · ${s.kicker.toUpperCase()}`, w / 2, 70);
+    ctx.fillStyle = C.ink;
+    let size = 124; ctx.font = `bold ${size}px Verdana, sans-serif`;
+    while (ctx.measureText(s.title).width > w - 40 && size > 80) { size -= 6; ctx.font = `bold ${size}px Verdana, sans-serif`; }
+    ctx.fillText(s.title, w / 2, 230);
   });
 }
-function textCanvas(body, repare, heading) {
-  return makeCanvas(1200, 560, (ctx, w, h) => {
-    ctx.fillStyle = 'rgba(26,36,30,0.94)'; roundRect(ctx, 0, 0, w, h, 28); ctx.fill();
-    let y = 70;
-    if (heading) { ctx.fillStyle = C.river; ctx.font = 'bold 46px Verdana, sans-serif'; ctx.fillText(heading, 44, y); y += 64; }
-    ctx.fillStyle = C.ink; ctx.font = '38px Verdana, sans-serif';
-    for (const l of wrap(ctx, body, w - 88)) { ctx.fillText(l, 44, y); y += 52; }
-    if (repare) {
-      y += 24; ctx.fillStyle = C.coffee; ctx.font = 'bold 30px Verdana, sans-serif'; ctx.fillText('REPARE', 44, y); y += 48;
-      ctx.fillStyle = C.muted; ctx.font = 'italic 36px Verdana, sans-serif';
-      for (const l of wrap(ctx, repare, w - 88)) { ctx.fillText(l, 44, y); y += 50; }
-    }
+/* Texto grande: 500 px por metro; reduz a fonte só se não couber */
+function textCanvas(body, repare, heading, wM = 2.6, hM = 2.2) {
+  const W = Math.round(wM * 500), H = Math.round(hM * 500), pad = 56;
+  return makeCanvas(W, H, (ctx, w, h) => {
+    const layout = (k, paint) => {
+      let y = pad + 10;
+      const line = (font, color, txt, lh) => {
+        ctx.font = font;
+        for (const l of wrap(ctx, txt, w - pad * 2)) { y += lh; if (paint) { ctx.fillStyle = color; ctx.fillText(l, pad, y); } }
+      };
+      if (heading) { line(`bold ${Math.round(68 * k)}px Verdana, sans-serif`, C.river, heading, 80 * k); y += 18 * k; }
+      line(`${Math.round(56 * k)}px Verdana, sans-serif`, C.ink, body, 76 * k);
+      if (repare) {
+        y += 34 * k; line(`bold ${Math.round(40 * k)}px Verdana, sans-serif`, C.coffee, 'REPARE', 54 * k);
+        line(`italic ${Math.round(50 * k)}px Verdana, sans-serif`, '#C9D3C6', repare, 68 * k);
+      }
+      return y + pad;
+    };
+    let k = 1;
+    while (layout(k, false) > h && k > 0.6) k -= 0.05;
+    ctx.fillStyle = 'rgba(26,36,30,0.96)'; roundRect(ctx, 0, 0, w, h, 36); ctx.fill();
+    layout(k, true);
   });
 }
 function buttonCanvas(label, active = true) {
   return makeCanvas(520, 200, (ctx, w, h) => {
     ctx.fillStyle = active ? '#E4EAE1' : 'rgba(228,234,225,0.25)'; roundRect(ctx, 6, 6, w - 12, h - 12, 90); ctx.fill();
-    ctx.fillStyle = '#122019'; ctx.font = 'bold 60px Verdana, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#122019'; ctx.font = 'bold 66px Verdana, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillText(label, w / 2, h / 2 + 4);
   });
 }
@@ -209,13 +225,15 @@ function render(i) {
   stopVideos();
   while (world.firstChild) world.removeChild(world.firstChild);
 
-  // Título no alto
-  const t = plane(4.4, 0.69, '0 2.15 -3.6');
+  // Layout em "slide": mídia à esquerda e texto grande à direita, perto do centro da visão
+  // (no VR Box as bordas da lente ficam desfocadas, então nada importante vai para as pontas)
+  const isPano = s.type === 'pano';
+  const t = plane(4.6, 0.69, isPano ? '0 2.4 -4' : '0 1.45 -3.4');
   panel(t, titleCanvas(s, current));
 
-  // Painel de texto abaixo, inclinado para leitura
-  const info = plane(2.6, 1.21, '0 -1.45 -2.2', '-40 0 0');
-  const draw = (h) => panel(info, h ? textCanvas(h.d, null, h.t) : textCanvas(s.text, s.repare));
+  const info = isPano ? plane(2.6, 1.5, '0 -1.0 -2.5', '-20 0 0') : plane(2.6, 2.2, '1.5 0.05 -3.0', '0 -22 0');
+  const tw = 2.6, th = isPano ? 1.5 : 2.2;
+  const draw = (h) => panel(info, h ? textCanvas(h.d, null, h.t, tw, th) : textCanvas(s.text, s.repare, null, tw, th));
   draw();
   showHot = s.type === 'pano' ? (k) => draw(HOTS[k]) : null;
 
@@ -242,27 +260,27 @@ function render(i) {
   } else if (s.type === 'video') {
     const v = document.getElementById(s.id);
     const scr = document.createElement('a-video');
-    scr.setAttribute('src', '#' + s.id); scr.setAttribute('width', 4.8); scr.setAttribute('height', 2.7);
-    scr.setAttribute('position', s.extra ? '-1.3 0.45 -3.6' : '0 0.45 -3.6');
-    if (s.extra) scr.setAttribute('rotation', '0 12 0');
+    scr.setAttribute('src', '#' + s.id); scr.setAttribute('width', 3.0); scr.setAttribute('height', 1.69);
+    scr.setAttribute('position', '-1.5 0.15 -3.1'); scr.setAttribute('rotation', '0 20 0');
     world.appendChild(scr);
     v.currentTime = 0; v.play().catch(() => {});
     if (s.extra) {
       const im = document.createElement('a-image');
-      im.setAttribute('src', '#' + s.extra); im.setAttribute('width', 3.6); im.setAttribute('height', 2.25);
-      im.setAttribute('position', '3.2 0.45 -2.9'); im.setAttribute('rotation', '0 -40 0');
+      im.setAttribute('src', '#' + s.extra); im.setAttribute('width', 2.4); im.setAttribute('height', 1.5);
+      im.setAttribute('position', '-3.5 0.15 -1.6'); im.setAttribute('rotation', '0 62 0');
       world.appendChild(im);
     }
   } else if (s.type === 'image') {
     const im = document.createElement('a-image');
-    im.setAttribute('src', '#' + s.id); im.setAttribute('height', 2.7); im.setAttribute('width', 2.7 * s.ratio);
-    im.setAttribute('position', '0 0.45 -3.6');
+    im.setAttribute('src', '#' + s.id); im.setAttribute('height', 1.7); im.setAttribute('width', 1.7 * s.ratio);
+    im.setAttribute('position', '-1.5 0.15 -3.1'); im.setAttribute('rotation', '0 20 0');
     world.appendChild(im);
   }
 
   // Navegação pelo olhar
-  button('‹ Anterior', '-1.95 -1.3 -2.1', '-38 25 0', () => render(current - 1), current > 0);
-  button(current === STOPS.length - 1 ? 'Recomeçar' : 'Próxima ›', '1.95 -1.3 -2.1', '-38 -25 0',
+  const by = isPano ? -1.55 : -1.25, bz = isPano ? -2.2 : -2.6, bx = isPano ? 1.95 : 1.1;
+  button('‹ Anterior', `${-bx} ${by} ${bz}`, `-25 ${isPano ? 25 : 10} 0`, () => render(current - 1), current > 0);
+  button(current === STOPS.length - 1 ? 'Recomeçar' : 'Próxima ›', `${bx} ${by} ${bz}`, `-25 ${isPano ? -25 : -10} 0`,
     () => render(current === STOPS.length - 1 ? 0 : current + 1));
   sendStatus();
   scheduleAuto();
